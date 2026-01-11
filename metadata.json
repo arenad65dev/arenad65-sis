@@ -1,0 +1,8 @@
+
+{
+  "name": "Arena D65 - Sports Management Hub",
+  "description": "A comprehensive sports complex management platform featuring POS, inventory control, financial dashboards, court management, and CRM modules with a sleek, modern UI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
