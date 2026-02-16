@@ -33,9 +33,9 @@ const CashierModal: React.FC<CashierModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Lógica de Saldos
-  const salesDuringShift = session?.totalSales || 0;
-  const totalSkimmings = session?.totalSkimmings || 0;
-  const expectedTotal = (session?.initialBalance || 0) + salesDuringShift - totalSkimmings;
+  const salesDuringShift = Number(session?.totalSales) || 0;
+  const totalSkimmings = Number(session?.totalSkimmings) || 0;
+  const expectedTotal = (Number(session?.initialBalance) || 0) + salesDuringShift - totalSkimmings;
   const difference = closingBalanceInput - expectedTotal;
 
   useEffect(() => {
@@ -102,7 +102,7 @@ const CashierModal: React.FC<CashierModalProps> = ({
             {!isCashierOpen ? 'Abertura de Turno' : activeTab === 'SKIM' ? 'Registrar Sangria' : 'Fechar Turno'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">
-            {isCashierOpen ? `Operador: ${session?.openedBy}` : 'Controle Operacional Arena'}
+            {isCashierOpen ? `Operador: ${session?.user?.name || 'N/A'}` : 'Controle Operacional Arena'}
           </p>
 
           {isCashierOpen && (
@@ -180,17 +180,17 @@ const CashierModal: React.FC<CashierModalProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Abertura + Vendas</span>
-                  <p className="text-sm font-black dark:text-white">R$ {((session?.initialBalance || 0) + salesDuringShift).toFixed(2)}</p>
+                  <p className="text-sm font-black dark:text-white">R$ {((Number(session?.initialBalance) || 0) + salesDuringShift).toFixed(2)}</p>
                 </div>
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 text-right">
                   <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest block mb-1">Sangrias (-)</span>
-                  <p className="text-sm font-black text-orange-500">R$ {totalSkimmings.toFixed(2)}</p>
+                  <p className="text-sm font-black text-orange-500">R$ {(Number(totalSkimmings) || 0).toFixed(2)}</p>
                 </div>
               </div>
 
               <div className="p-5 bg-slate-900 dark:bg-black rounded-3xl border border-white/5 flex justify-between items-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Esperado (Líquido)</span>
-                <p className="text-lg font-black text-white">R$ {expectedTotal.toFixed(2)}</p>
+                <p className="text-lg font-black text-white">R$ {Number(expectedTotal).toFixed(2)}</p>
               </div>
 
               <div className="space-y-2">

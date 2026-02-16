@@ -1,0 +1,29 @@
+import { FastifyInstance } from 'fastify';
+import { TableController } from '../controllers/TableController';
+import { requireStaff } from '../middlewares/auth';
+
+export async function tablesRoutes(fastify: FastifyInstance) {
+    // Add authentication middleware to protect all table routes
+    fastify.addHook('onRequest', requireStaff);
+    
+    // Listar mesas abertas
+    fastify.get('/', TableController.getOpenTables);
+
+    // Buscar mesa específica
+    fastify.get('/:tableNumber', TableController.getTable);
+
+    // Abrir mesa
+    fastify.post('/open', TableController.openTable);
+
+    // Adicionar itens à mesa
+    fastify.post('/:tableNumber/items', TableController.addItemsToTable);
+
+    // Fechar mesa
+    fastify.post('/:tableNumber/close', TableController.closeTable);
+
+    // Transferir mesa
+    fastify.post('/:tableNumber/transfer', TableController.transferTable);
+
+    // Cancelar mesa
+    fastify.delete('/:tableNumber', TableController.cancelTable);
+}

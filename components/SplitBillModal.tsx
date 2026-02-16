@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -30,7 +29,7 @@ const SplitBillModal: React.FC<SplitBillModalProps> = ({ isOpen, onClose, tableD
   }, [selections, tableData]);
 
   const selectedTotal = useMemo(() => {
-    return selectedList.reduce((acc, item) => acc + (item.product.price * item.qty), 0);
+    return selectedList.reduce((acc, item) => acc + (Number(item.product.price) * item.qty), 0);
   }, [selectedList]);
 
   if (!isOpen) return null;
@@ -40,18 +39,18 @@ const SplitBillModal: React.FC<SplitBillModalProps> = ({ isOpen, onClose, tableD
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fadeIn" onClick={onClose}></div>
 
       <div className="relative bg-white dark:bg-surface-dark w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-fadeIn flex flex-col font-display border border-white/10 mb-10">
-        <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center shrink-0">
+        <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-1">Dividir Conta</h2>
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-1">Dividir Conta</h2>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mesa {tableData.id}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Selecionado</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">R$ {selectedTotal.toFixed(2)}</p>
+            <p className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-none">R$ {(Number(selectedTotal) || 0).toFixed(2)}</p>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-4 max-h-[50vh] custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 max-h-[50vh] custom-scrollbar">
           {tableData.items.map((item) => {
             const currentSelected = selections[item.product.id] || 0;
             return (
@@ -73,9 +72,9 @@ const SplitBillModal: React.FC<SplitBillModalProps> = ({ isOpen, onClose, tableD
           })}
         </div>
 
-        <div className="p-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0">
+        <div className="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0">
           <button onClick={onClose} className="flex-1 h-14 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-black text-[11px] uppercase tracking-widest rounded-2xl text-slate-500">Cancelar</button>
-          <button disabled={selectedTotal <= 0} onClick={() => onConfirm(selectedList)} className="flex-[1.5] h-14 bg-primary text-slate-900 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95">Pagar R$ {selectedTotal.toFixed(2)}</button>
+          <button disabled={selectedTotal <= 0} onClick={() => onConfirm(selectedList)} className="flex-[1.5] h-14 bg-primary text-slate-900 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95">Pagar R$ {(Number(selectedTotal) || 0).toFixed(2)}</button>
         </div>
       </div>
     </div>,

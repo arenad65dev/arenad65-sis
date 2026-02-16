@@ -61,7 +61,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     if (cost > 0) {
       newMargin = ((value - cost) / cost) * 100;
     }
-    setFormData({ ...formData, price: value, margin: parseFloat(newMargin.toFixed(2)) });
+    setFormData({ ...formData, price: value, margin: parseFloat((Number(newMargin) || 0).toFixed(2)) });
   };
 
   const handleCostChange = (value: number) => {
@@ -70,13 +70,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     if (value > 0) {
       newMargin = ((price - value) / value) * 100;
     }
-    setFormData({ ...formData, purchasePrice: value, margin: parseFloat(newMargin.toFixed(2)) });
+    setFormData({ ...formData, purchasePrice: value, margin: parseFloat((Number(newMargin) || 0).toFixed(2)) });
   };
 
   const handleMarginChange = (value: number) => {
     const cost = formData.purchasePrice || 0;
     const newPrice = cost * (1 + value / 100);
-    setFormData({ ...formData, margin: value, price: parseFloat(newPrice.toFixed(2)) });
+    setFormData({ ...formData, margin: value, price: parseFloat((Number(newPrice) || 0).toFixed(2)) });
   };
 
   return createPortal(
@@ -87,19 +87,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
       {/* Modal Card */}
       <form
         onSubmit={handleSubmit}
-        className="relative bg-white dark:bg-surface-dark w-full max-w-4xl max-h-[90vh] rounded-[40px] shadow-2xl overflow-hidden animate-fadeIn flex flex-col md:flex-row border border-white/20"
+        className="relative bg-white dark:bg-surface-dark w-full max-w-4xl max-h-[90vh] rounded-[32px] md:rounded-[40px] shadow-2xl overflow-hidden animate-fadeIn flex flex-col md:flex-row border border-white/20"
       >
         {/* Botão de Fechar */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 z-20 size-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-all shadow-sm"
+          className="absolute top-4 right-4 md:top-6 md:right-6 z-20 size-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-all shadow-sm"
         >
           <span className="material-symbols-outlined">close</span>
         </button>
 
         {/* Coluna Esquerda: Dados Gerais */}
-        <div className="flex-1 p-8 md:p-12 space-y-8 border-r border-slate-100 dark:border-slate-800 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 p-4 md:p-8 lg:p-12 space-y-6 md:space-y-8 border-r border-slate-100 dark:border-slate-800 overflow-y-auto custom-scrollbar">
           <div className="flex items-center gap-4">
             <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-3xl font-black">inventory_2</span>
@@ -211,7 +211,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
         </div>
 
         {/* Coluna Direita: Controle de Estoque */}
-        <div className="w-full md:w-[380px] bg-slate-50/80 dark:bg-slate-900/40 p-8 md:p-12 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
+        <div className="w-full md:w-[380px] bg-slate-50/80 dark:bg-slate-900/40 p-6 md:p-12 flex flex-col gap-8 overflow-y-auto custom-scrollbar border-t md:border-t-0 border-slate-100 dark:border-slate-800">
           <div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1">Controle de Estoque</h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight leading-relaxed">Defina os limites de segurança para alertas inteligentes</p>

@@ -1,0 +1,261 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+  CASHIER
+  WAITER
+  CUSTOMER
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+  RENTAL
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  TRANSFER
+  TAB // Pendura/Fiado
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum StockMovementType {
+  IN    // Entrada de mercadoria
+  OUT   // Saída por venda
+  ADJ   // Ajuste manual
+  LOSS  // Perda/quebra
+}
+
+enum CashierStatus {
+  OPEN
+  CLOSED
+}
+
+// Models
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  isActive  Boolean  @default(true)
+  avatar    String?
+  preferences Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders          Order[]
+  cashierSessions CashierSession[]
+  logs            ActivityLog[]
+  stockMovements  StockMovement[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String   @default("PRODUCT") // PRODUCT, EXPENSE, ASSET
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products     Product[]
+  transactions Transaction[]
+}
+
+model Product {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  price         Decimal     @db.Decimal(10, 2)
+  costPrice     Decimal     @default(0) @db.Decimal(10, 2)
+  purchasePrice Decimal?    @db.Decimal(10, 2) // Last purchase price
+  stock         Int         @default(0)
+  minStock      Int         @default(5)
+  unit          String      @default("UN")
+  sku           String?     @unique
+  imageUrl      String?
+  isActive      Boolean     @default(true)
+  type          ProductType @default(PRODUCT)
+  categoryId    String?
+  
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  orderItems    OrderItem[]
+  stockMovements StockMovement[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  number      Int         @default(autoincrement())
+  tableNumber String?
+  status      OrderStatus @default(OPEN)
+  totalAmount Decimal     @default(0) @db.Decimal(10, 2)
+  notes       String?
+  
+  userId      String?     // Staff who opened/managed
+  user        User?       @relation(fields: [userId], references: [id])
+  
+  clientId    String?     // Customer (optional)
+  client      Client?     @relation(fields: [clientId], references: [id])
+  
+  createdAt   DateTime    @default(now())
+  closedAt    DateTime?
+
+  // Relations
+  items       OrderItem[]
+  transactions Transaction[]
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  cpf       String?  @unique
+  phone     String?
+  email     String?
+  points    Int      @default(0)
+  active    Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders    Order[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2) // Snapshot of price at time of sale
+  
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  type          TransactionType
+  amount        Decimal         @db.Decimal(10, 2)
+  description   String?
+  date          DateTime        @default(now())
+  paymentMethod PaymentMethod?
+  
+  categoryId    String?
+  category      Category?       @relation(fields: [categoryId], references: [id])
+  
+  orderId       String?
+  order         Order?          @relation(fields: [orderId], references: [id])
+  
+  cashierId     String?
+  cashierSession CashierSession? @relation(fields: [cashierId], references: [id])
+
+  createdAt     DateTime        @default(now())
+}
+
+model CashierSession {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  
+  openedAt       DateTime      @default(now())
+  closedAt       DateTime?
+  
+  initialBalance Decimal       @default(0) @db.Decimal(10, 2)
+  finalBalance   Decimal?      @db.Decimal(10, 2)
+  
+  totalSales     Decimal       @default(0) @db.Decimal(10, 2)
+  totalSkimmings Decimal       @default(0) @db.Decimal(10, 2) // Sangrias
+  
+  status         CashierStatus @default(OPEN)
+  
+  // Relations
+  transactions   Transaction[]
+  skimmings      Skimming[]
+}
+
+model Skimming { // Sangria
+  id              String         @id @default(uuid())
+  sessionId       String
+  session         CashierSession @relation(fields: [sessionId], references: [id])
+  
+  amount          Decimal        @db.Decimal(10, 2)
+  reason          String
+  createdAt       DateTime       @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model Maintenance {
+  id        String   @id @default(uuid())
+  title     String
+  date      DateTime
+  priority  String   // HIGH, MEDIUM, LOW
+  status    String   @default("PENDING") // PENDING, COMPLETED, IN_PROGRESS
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockMovement {
+  id          String            @id @default(uuid())
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  
+  type        StockMovementType
+  quantity    Int               // Positive for IN, negative for OUT/LOSS
+  unitCost    Decimal?          @db.Decimal(10, 2) // Cost per unit for IN movements
+  
+  reason      String?           // Description/reason for movement
+  reference   String?           // Reference number (e.g., invoice, order #)
+  
+  userId      String?           // Who made the movement
+  user        User?             @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime          @default(now())
+}

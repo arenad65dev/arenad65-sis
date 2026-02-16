@@ -1,13 +1,15 @@
 
 export enum Module {
   DASHBOARD = 'Dashboard',
-  FINANCE = 'Financeiro',
   POS = 'Bar / PDV',
-  COURTS = 'Instalações',
-  USERS = 'Usuários',
-  CRM = 'Marketing / CRM',
-  INVENTORY = 'Estoque',
-  REPORTS = 'Relatórios & BI'
+  INVENTORY = 'Estoque'
+}
+
+export interface UserPreferences {
+  notifications: boolean;
+  sound: boolean;
+  weeklyReport: boolean;
+  autoTheme: boolean;
 }
 
 export interface User {
@@ -25,6 +27,8 @@ export interface User {
   totalSpent?: number; // LTV (Lifetime Value)
   lastActivityDays?: number; // For churn detection
   phone?: string;
+  cpf?: string;
+  preferences?: UserPreferences;
 }
 
 export interface AppNotification {
@@ -41,16 +45,33 @@ export interface AppNotification {
 export interface Product {
   id: string;
   name: string;
+  description?: string;
   price: number;
+  costPrice?: number;
   purchasePrice?: number;
   margin?: number;
-  category: string;
-  sku: string;
+  category?: Category;
+  categoryId?: string;
+  sku?: string;
   stock: number;
   minStock: number;
-  expiry?: string;
-  image: string;
+  unit?: string;
+  image?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  type?: 'PRODUCT' | 'SERVICE' | 'RENTAL';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
   description?: string;
+  type?: string;
+  color?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CostItem {

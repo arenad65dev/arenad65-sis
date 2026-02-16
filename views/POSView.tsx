@@ -1,10 +1,13 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { MOCK_PRODUCTS, MOCK_USERS } from '../constants';
+import { posService } from '../services/posService';
+import { tableService, Table, TableItem } from '../services/tableService';
 import { useCart } from '../hooks/useCart';
 import CheckoutModal from '../components/CheckoutModal';
 import ConfirmModal from '../components/ConfirmModal';
 import SplitBillModal from '../components/SplitBillModal';
+import NewClientModal from '../components/NewClientModal';
+import { clientService } from '../services/clientService';
 import { User } from '../types';
 
 interface Toast {
@@ -13,14 +16,7 @@ interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
-interface OpenTable {
-  id: string;
-  items: { product: any, qty: number }[];
-  total: number;
-  paidAmount: number;
-  clientId?: string;
-  startTime: string;
-}
+// Usando a interface Table do serviço
 
 interface POSViewProps {
   isCashierOpen?: boolean;
@@ -36,10 +32,13 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [clientSearchResults, setClientSearchResults] = useState<User[]>([]);
+  const [isSearchingClient, setIsSearchingClient] = useState(false);
 
   const [orderMode, setOrderMode] = useState<'DIRECT' | 'TABLE'>('DIRECT');
   const [tableNumber, setTableNumber] = useState('');
-  const [openTables, setOpenTables] = useState<Record<string, OpenTable>>({});
+  const [openTables, setOpenTables] = useState<Record<string, Table>>({});
 
   const { items, addToCart, updateQty, removeFromCart, total, clearCart, setItems } = useCart();
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -56,25 +55,72 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     }, 3000);
   };
 
-  const categories = ['Todos', 'Bebidas', 'Comidas', 'Equipamentos'];
+  const [categories, setCategories] = useState(['Todos']);
 
-  const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchCategory = categoryFilter === 'Todos' || p.category === categoryFilter;
-      return matchSearch && matchCategory;
-    });
-  }, [search, categoryFilter]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Buscar categorias dinamicamente
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await posService.getProducts();
+        const uniqueCategories = ['Todos', ...new Set(data.map((p: any) => p.category?.name || 'Sem Categoria'))];
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error("Error fetching categories", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
-    if (!clientSearch) return;
-    let userFound = MOCK_USERS.find(u => u.id === clientSearch);
-    if (!userFound && clientSearch.length >= 3) {
-      userFound = MOCK_USERS.find(u => u.name.toLowerCase().includes(clientSearch.toLowerCase()));
+    const fetchProducts = async () => {
+      setLoadingProducts(true);
+      try {
+        const data = await posService.getProducts(search, categoryFilter === 'Todos' ? undefined : categoryFilter);
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products", error);
+        addToast('Erro ao carregar produtos', 'error');
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      fetchProducts();
+    }, 300); // Debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [search, categoryFilter]);
+
+  // Client Search Effect
+  useEffect(() => {
+    if (clientSearch.length < 3) {
+      setClientSearchResults([]);
+      return;
     }
-    if (userFound && userFound.id !== selectedUser?.id) {
-      setSelectedUser(userFound);
+
+    // Don't search if we just selected a user (which matches the search text)
+    if (selectedUser && selectedUser.name === clientSearch) {
+      return;
     }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingClient(true);
+      try {
+        const results = await clientService.list(clientSearch);
+        setClientSearchResults(results);
+      } catch (error) {
+        console.error("Error searching clients", error);
+      } finally {
+        setIsSearchingClient(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [clientSearch, selectedUser]);
 
   const handleResetPDV = () => {
@@ -95,132 +141,180 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     addToast(`Modo: ${mode === 'DIRECT' ? 'Balcão' : 'Mesa'}`, 'info');
   };
 
-  const loadTable = (num: string) => {
+  const loadTable = async (num: string) => {
     const isSwitchingTable = prevTableRef.current !== '' && prevTableRef.current !== num;
-    if (openTables[num]) {
-      setItems(openTables[num].items);
-      const tableClient = openTables[num].clientId || '';
-      if (tableClient) {
-        const u = MOCK_USERS.find(user => user.id === tableClient);
-        setSelectedUser(u || null);
-        setClientSearch('');
-      } else {
-        setSelectedUser(null);
-        setClientSearch('');
+
+    if (num) {
+      try {
+        // Buscar mesa do backend
+        const table = await tableService.getTable(num);
+
+        if (table) {
+          // Converter itens do backend para o formato do carrinho
+          const cartItems = table.items.map(item => ({
+            product: {
+              ...item.product,
+              price: Number(item.price)
+            },
+            qty: item.quantity
+          }));
+
+          setItems(cartItems);
+
+          const tableClient = table.clientId || '';
+          if (tableClient) {
+            // TODO: Fetch real user if needed
+            setClientSearch('');
+          } else {
+            setSelectedUser(null);
+            setClientSearch('');
+          }
+          addToast(`Mesa ${num} carregada.`, 'info');
+        } else {
+          if (isSwitchingTable) {
+            clearCart();
+            setSelectedUser(null);
+            setClientSearch('');
+          } else {
+            setSelectedUser(null);
+            setClientSearch('');
+          }
+          addToast(`Mesa ${num} pronta para novos lançamentos.`, 'info');
+        }
+      } catch (error: any) {
+        console.error('Error loading table:', error);
+
+        // Handle specific error cases
+        if (error.response?.status === 404) {
+          // Automatically open the table if it doesn't exist
+          try {
+            addToast(`Abrindo mesa ${num} automaticamente...`, 'info');
+            await tableService.openTable({ tableNumber: num });
+
+            // Clear cart for new table
+            clearCart();
+            setSelectedUser(null);
+            setClientSearch('');
+
+            // Refresh open tables list
+            const tables = await tableService.getOpenTables();
+            const tablesMap: Record<string, Table> = {};
+            tables.forEach((table: Table) => {
+              tablesMap[table.tableNumber] = table;
+            });
+            setOpenTables(tablesMap);
+
+            addToast(`Mesa ${num} aberta com sucesso!`, 'success');
+          } catch (openError: any) {
+            console.error('Error opening table:', openError);
+
+            if (openError.response?.status === 400 && openError.response?.data?.message?.includes('já está aberta')) {
+              addToast(`Mesa ${num} já está aberta!`, 'info');
+              // Try to load the table again
+              loadTable(num);
+            } else {
+              addToast('Erro ao abrir mesa automaticamente', 'error');
+              // Clear cart for non-existent table
+              clearCart();
+              setSelectedUser(null);
+              setClientSearch('');
+            }
+          }
+        } else {
+          addToast('Erro ao carregar mesa', 'error');
+        }
       }
-      addToast(`Mesa ${num} carregada.`, 'info');
     } else {
-      if (isSwitchingTable) {
-        clearCart();
-        setSelectedUser(null);
-        setClientSearch('');
-      } else {
-        setSelectedUser(null);
-        setClientSearch('');
-      }
-      if (num !== '') {
-        addToast(`Mesa ${num} pronta para novos lançamentos.`, 'info');
-      }
+      // Limpar se não houver número de mesa
+      clearCart();
+      setSelectedUser(null);
+      setClientSearch('');
     }
+
     prevTableRef.current = num;
   };
 
-  const handleLaunchToTable = () => {
+  const handleLaunchToTable = async () => {
     if (!tableNumber) {
       addToast('Informe o número da mesa!', 'error');
       return;
     }
-    const currentTable = openTables[tableNumber] || {
-      id: tableNumber,
-      items: [],
-      total: 0,
-      paidAmount: 0,
-      startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    const newItems = [...currentTable.items];
-    items.forEach(cartItem => {
-      const idx = newItems.findIndex(i => i.product.id === cartItem.product.id);
-      if (idx > -1) {
-        newItems[idx].qty += cartItem.qty;
-      } else {
-        newItems.push({ ...cartItem });
-      }
-    });
-    setOpenTables(prev => ({
-      ...prev,
-      [tableNumber]: {
-        ...currentTable,
-        items: newItems,
-        total: newItems.reduce((acc, i) => acc + (i.product.price * i.qty), 0),
-        clientId: selectedUser?.id || currentTable.clientId
-      }
-    }));
-    addToast(`Itens lançados na Mesa ${tableNumber}!`);
-    handleResetPDV();
-  };
 
-  const handleFinishOrder = (data: any) => {
-    const targetTable = tableNumber;
-    if (orderMode === 'TABLE' && targetTable && openTables[targetTable]) {
-      const tableData = openTables[targetTable];
-      if (splitItems.length > 0) {
-        const updatedTableItems = [...tableData.items];
-        splitItems.forEach(splitItem => {
-          const idx = updatedTableItems.findIndex(ti => ti.product.id === splitItem.product.id);
-          if (idx > -1) {
-            updatedTableItems[idx].qty -= splitItem.qty;
-            if (updatedTableItems[idx].qty <= 0) updatedTableItems.splice(idx, 1);
-          }
-        });
-        if (updatedTableItems.length === 0) {
-          const newOpen = { ...openTables };
-          delete newOpen[targetTable];
-          setOpenTables(newOpen);
-          addToast(`Mesa ${targetTable} finalizada!`);
+    if (items.length === 0) {
+      addToast('Carrinho vazio! Adicione itens antes de lançar na mesa.', 'error');
+      return;
+    }
+
+    try {
+      // Converter itens do carrinho para o formato do backend
+      const itemsForBackend = items.map(item => ({
+        productId: item.product.id,
+        quantity: item.qty
+      }));
+
+      // Enviar itens para o backend
+      await tableService.addItemsToTable(tableNumber, itemsForBackend);
+
+      addToast(`Itens lançados na Mesa ${tableNumber}!`);
+      handleResetPDV();
+    } catch (error: any) {
+      console.error('Error launching to table:', error);
+
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        if (error.response?.data?.message?.includes('não está aberta')) {
+          addToast(`Mesa ${tableNumber} não está aberta. Por favor, abra a mesa primeiro.`, 'error');
+        } else if (error.response?.data?.message?.includes('Estoque insuficiente')) {
+          addToast(`Estoque insuficiente para alguns itens.`, 'error');
         } else {
-          setOpenTables(prev => ({
-            ...prev,
-            [targetTable]: {
-              ...tableData,
-              items: updatedTableItems,
-              total: updatedTableItems.reduce((acc, i) => acc + (i.product.price * i.qty), 0)
-            }
-          }));
-          addToast(`Pagamento confirmado.`);
+          addToast(error.response?.data?.message || 'Erro ao lançar itens na mesa', 'error');
         }
       } else {
-        const amountPaidInThisTx = data.amountToPay;
-        const newPaidAmount = tableData.paidAmount + amountPaidInThisTx;
-        if (tableData.total - newPaidAmount <= 0.01) {
-          const newOpen = { ...openTables };
-          delete newOpen[targetTable];
-          setOpenTables(newOpen);
-          addToast(`Mesa ${targetTable} finalizada!`);
-        } else {
-          setOpenTables(prev => ({
-            ...prev,
-            [targetTable]: { ...tableData, paidAmount: newPaidAmount }
-          }));
-          addToast(`Parcial de R$ ${amountPaidInThisTx.toFixed(2)} registrado.`);
-        }
-      }
-    } else {
-      const amountPaid = data.amountToPay;
-      const currentTotal = total - directPaidAmount;
-      const isEffectivelyPartial = data.isPartial || amountPaid < currentTotal - 0.01;
-
-      if (isEffectivelyPartial) {
-        setDirectPaidAmount(prev => prev + amountPaid);
-        addToast(`Parcial de R$ ${amountPaid.toFixed(2)} registrado.`);
-        setIsCheckoutOpen(false);
-        return;
-      } else {
-        addToast(`Venda Balcão finalizada!`);
+        addToast('Erro ao lançar itens na mesa', 'error');
       }
     }
-    setIsCheckoutOpen(false);
-    setSplitItems([]);
-    handleResetPDV();
+  };
+
+  const handleFinishOrder = async (data: any) => {
+    try {
+      if (orderMode === 'TABLE' && tableNumber) {
+        // Fechar mesa
+        const paymentData = {
+          paymentMethod: data.method === 'credit' ? 'CREDIT_CARD' :
+            data.method === 'debit' ? 'DEBIT_CARD' :
+              data.method === 'pix' ? 'PIX' : 'CASH',
+          paidAmount: currentTableBalance
+        };
+
+        await tableService.closeTable(tableNumber, paymentData);
+        addToast(`Mesa ${tableNumber} fechada com sucesso!`);
+      } else {
+        // Venda direta
+        const orderData = {
+          items: items.map(i => ({ productId: i.product.id, quantity: i.qty }))
+          // userId: selectedUser?.id // If you have user selection logic
+        };
+
+        const createdOrder = await posService.createOrder(orderData);
+
+        // Map frontend payment method to backend enum
+        let method = 'CASH';
+        if (data.method === 'credit') method = 'CREDIT_CARD';
+        if (data.method === 'debit') method = 'DEBIT_CARD';
+        if (data.method === 'pix') method = 'PIX';
+
+        await posService.payOrder(createdOrder.id, method);
+        addToast(`Venda #${createdOrder.number} finalizada com sucesso!`);
+      }
+
+      setIsCheckoutOpen(false);
+      setSplitItems([]);
+      handleResetPDV();
+
+    } catch (error) {
+      console.error(error);
+      addToast('Erro ao processar venda', 'error');
+    }
   };
 
   const handleSplitConfirm = (selectedToPay: { product: any, qty: number }[]) => {
@@ -229,12 +323,36 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     setIsCheckoutOpen(true);
   };
 
+  // Carregar mesas abertas do backend
+  useEffect(() => {
+    const fetchOpenTables = async () => {
+      try {
+        const tables = await tableService.getOpenTables();
+        const tablesMap: Record<string, Table> = {};
+
+        tables.forEach((table: Table) => {
+          tablesMap[table.tableNumber] = table;
+        });
+
+        setOpenTables(tablesMap);
+      } catch (error) {
+        console.error('Error fetching open tables:', error);
+      }
+    };
+
+    fetchOpenTables();
+
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(fetchOpenTables, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const currentTableBalance = useMemo(() => {
     if (splitItems.length > 0) {
       return splitItems.reduce((acc, i) => acc + (i.product.price * i.qty), 0);
     }
     if (orderMode === 'TABLE' && tableNumber && openTables[tableNumber]) {
-      return openTables[tableNumber].total - openTables[tableNumber].paidAmount;
+      return Number(openTables[tableNumber].totalAmount) - 0; // No backend, tables don't have paidAmount
     }
     return total - directPaidAmount;
   }, [tableNumber, openTables, total, orderMode, splitItems, directPaidAmount]);
@@ -263,7 +381,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
         </div>
       )}
 
-      <div className={`flex flex-col lg:flex-row gap-6 h-full overflow-hidden animate-fadeIn relative font-display text-slate-900 dark:text-slate-100 ${!isCashierOpen ? 'blur-sm pointer-events-none' : ''}`}>
+      <div className={`flex flex-col lg:flex-row gap-6 lg:h-full lg:overflow-hidden animate-fadeIn relative font-display text-slate-900 dark:text-slate-100 ${!isCashierOpen ? 'blur-sm pointer-events-none' : ''}`}>
         <div className="fixed top-20 right-8 z-[200] flex flex-col gap-3 pointer-events-none">
           {toasts.map(toast => (
             <div key={toast.id} className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-fadeIn border backdrop-blur-md pointer-events-auto ${toast.type === 'success' ? 'bg-primary/90 text-slate-900 border-primary/20' :
@@ -275,7 +393,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
           ))}
         </div>
 
-        <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-6 lg:overflow-hidden min-h-[600px] lg:min-h-0">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
             <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex border border-slate-200/50 dark:border-slate-800">
               <button
@@ -323,7 +441,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
               </div>
 
               <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-6 custom-scrollbar content-start">
-                {filteredProducts.map(product => (
+                {products.map(product => (
                   <button
                     key={product.id}
                     disabled={product.stock <= 0}
@@ -332,11 +450,11 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                       }`}
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900 relative">
-                      <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img src={product.imageUrl || 'https://placehold.co/400x400?text=No+Image'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
                     <div className="flex-1 px-1">
                       <h4 className="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate uppercase tracking-tight">{product.name}</h4>
-                      <p className="mt-1 text-primary-dark dark:text-primary font-black text-[18px]">R$ {product.price.toFixed(2)}</p>
+                      <p className="mt-1 text-primary-dark dark:text-primary font-black text-[18px]">R$ {(Number(product.price) || 0).toFixed(2)}</p>
                     </div>
                   </button>
                 ))}
@@ -344,29 +462,27 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
             </>
           ) : (
             <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-6 custom-scrollbar content-start">
-              {Object.values(openTables).map((table: OpenTable) => {
-                const client = MOCK_USERS.find(u => u.id === table.clientId);
+              {Object.values(openTables).map((table: Table) => {
                 return (
                   <div key={table.id} className="bg-white dark:bg-surface-dark rounded-[32px] border border-slate-100 dark:border-slate-800 p-6 shadow-sm hover:shadow-xl transition-all group flex flex-col gap-4">
                     <div className="flex justify-between items-start">
                       <div className="size-14 bg-slate-100 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-200 dark:border-slate-800">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Mesa</span>
-                        <span className="text-2xl font-black dark:text-white leading-none mt-1">{table.id}</span>
+                        <span className="text-2xl font-black dark:text-white leading-none mt-1">{table.tableNumber}</span>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Subtotal</p>
-                        <p className="text-2xl font-black dark:text-white">R$ {table.total.toFixed(2)}</p>
+                        <p className="text-2xl font-black dark:text-white">R$ {(Number(table.totalAmount) || 0).toFixed(2)}</p>
                       </div>
                     </div>
 
                     <div className="flex-1 flex flex-col gap-3">
                       <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        {client ? (
+                        {table.user ? (
                           <>
-                            <img src={client.avatar} className="size-8 rounded-full border border-white" />
                             <div className="min-w-0">
-                              <p className="text-[10px] font-black uppercase dark:text-white truncate">{client.name}</p>
-                              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Desde {table.startTime}</p>
+                              <p className="text-[10px] font-black uppercase dark:text-white truncate">{table.user.name}</p>
+                              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Desde {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
                           </>
                         ) : (
@@ -380,13 +496,13 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
                     <div className="grid grid-cols-2 gap-3 mt-2">
                       <button
-                        onClick={() => { setOrderMode('TABLE'); setTableNumber(table.id); loadTable(table.id); setViewMode('CATALOG'); }}
+                        onClick={() => { setOrderMode('TABLE'); setTableNumber(table.tableNumber); loadTable(table.tableNumber); setViewMode('CATALOG'); }}
                         className="h-11 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
                       >
                         Abrir Comanda
                       </button>
                       <button
-                        onClick={() => { setTableNumber(table.id); setOrderMode('TABLE'); setIsSplitModalOpen(true); }}
+                        onClick={() => { setTableNumber(table.tableNumber); setOrderMode('TABLE'); setIsSplitModalOpen(true); }}
                         className="h-11 bg-primary hover:bg-primary-dark text-slate-900 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/10"
                       >
                         Fechar / Dividir
@@ -396,7 +512,35 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                 );
               })}
               <button
-                onClick={() => { setViewMode('CATALOG'); handleSwitchOrderMode('TABLE'); setTableNumber(''); }}
+                onClick={async () => {
+                  try {
+                    const tableNumber = prompt('Digite o número da mesa:');
+                    if (tableNumber && tableNumber.trim()) {
+                      await tableService.openTable({ tableNumber: tableNumber.trim() });
+                      addToast(`Mesa ${tableNumber} aberta com sucesso!`, 'success');
+                      // Recarregar mesas
+                      const tables = await tableService.getOpenTables();
+                      const tablesMap: Record<string, Table> = {};
+                      tables.forEach((table: Table) => {
+                        tablesMap[table.tableNumber] = table;
+                      });
+                      setOpenTables(tablesMap);
+                    }
+                  } catch (error: any) {
+                    console.error('Error opening table:', error);
+
+                    // Handle specific error cases
+                    if (error.response?.status === 400) {
+                      if (error.response?.data?.message?.includes('já está aberta')) {
+                        addToast(`Mesa ${tableNumber} já está aberta!`, 'error');
+                      } else {
+                        addToast(error.response?.data?.message || 'Erro ao abrir mesa', 'error');
+                      }
+                    } else {
+                      addToast('Erro ao abrir mesa', 'error');
+                    }
+                  }
+                }}
                 className="bg-slate-50 dark:bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 flex flex-col items-center justify-center gap-4 text-slate-400 hover:border-primary hover:text-primary transition-all group"
               >
                 <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
@@ -406,8 +550,8 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
           )}
         </div>
 
-        <aside className="w-full lg:w-[440px] bg-white dark:bg-surface-dark rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden shrink-0">
-          <div className="px-10 pt-10 flex justify-between items-center shrink-0">
+        <aside className="w-full lg:w-[440px] bg-white dark:bg-surface-dark rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden shrink-0 order-2 lg:order-none mt-6 lg:mt-0 h-[600px] lg:h-auto">
+          <div className="px-6 md:px-10 pt-6 md:pt-10 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-3">
               <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary text-[24px] font-black">shopping_basket</span>
@@ -422,7 +566,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
             </button>
           </div>
 
-          <div className="p-1.5 mx-10 mt-8 bg-slate-100 dark:bg-slate-900 rounded-2xl flex gap-1 shrink-0 border border-slate-200/50 dark:border-white/5">
+          <div className="p-1.5 mx-6 md:mx-10 mt-8 bg-slate-100 dark:bg-slate-900 rounded-2xl flex gap-1 shrink-0 border border-slate-200/50 dark:border-white/5">
             <button
               onClick={() => handleSwitchOrderMode('DIRECT')}
               className={`flex-1 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${orderMode === 'DIRECT' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-400'}`}
@@ -455,17 +599,57 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                 )}
 
                 <div className="relative flex-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">
-                    Atleta Fidelidade
-                  </label>
+                  <div className="flex justify-between items-center mb-2 ml-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      Atleta Fidelidade
+                    </label>
+                    <button
+                      onClick={() => setIsNewClientModalOpen(true)}
+                      className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                    >
+                      + Novo
+                    </button>
+                  </div>
+
                   {!selectedUser ? (
-                    <input
-                      type="text"
-                      placeholder="Buscar por ID ou Nome..."
-                      value={clientSearch}
-                      onChange={(e) => setClientSearch(e.target.value)}
-                      className="w-full px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[12px] font-black uppercase outline-none focus:ring-4 focus:ring-primary/10 dark:text-white transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar por Nome ou CPF..."
+                        value={clientSearch}
+                        onChange={(e) => setClientSearch(e.target.value)}
+                        className="w-full px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[12px] font-black uppercase outline-none focus:ring-4 focus:ring-primary/10 dark:text-white transition-all"
+                      />
+                      {isSearchingClient && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <span className="material-symbols-outlined animate-spin text-sm text-primary">progress_activity</span>
+                        </div>
+                      )}
+
+                      {clientSearchResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                          {clientSearchResults.map(client => (
+                            <button
+                              key={client.id}
+                              onClick={() => {
+                                setSelectedUser(client);
+                                setClientSearch('');
+                                setClientSearchResults([]);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-slate-700/50 last:border-none"
+                            >
+                              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
+                                {client.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase">{client.name}</p>
+                                <p className="text-[9px] text-slate-400 font-medium">CPF: {client.cpf || 'N/A'}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border border-primary/30 rounded-xl animate-fadeIn">
                       <img src={selectedUser.avatar} className="size-8 rounded-full border border-white dark:border-slate-800" />
@@ -483,7 +667,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-10 space-y-5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-5 custom-scrollbar">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-10 gap-6">
                 <span className="material-symbols-outlined text-[90px] font-light">shopping_bag</span>
@@ -494,7 +678,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                 <div key={item.product.id} className="flex items-center gap-4 bg-slate-50/50 dark:bg-slate-900/40 p-3.5 rounded-2xl border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all shadow-sm">
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-black text-slate-900 dark:text-white truncate uppercase tracking-tight">{item.product.name}</p>
-                    <p className="text-[11px] text-primary-dark dark:text-primary font-black">R$ {(item.product.price * item.qty).toFixed(2)}</p>
+                    <p className="text-[11px] text-primary-dark dark:text-primary font-black">R$ {((Number(item.product.price) || 0) * (Number(item.qty) || 0)).toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
                     <button onClick={() => updateQty(item.product.id, -1)} className="size-7 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all"><span className="material-symbols-outlined text-lg">remove</span></button>
@@ -507,22 +691,22 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
             )}
           </div>
 
-          <div className="p-10 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 shrink-0">
+          <div className="p-6 md:p-10 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 shrink-0">
             <div className="flex justify-between items-end mb-6">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{directPaidAmount > 0 ? 'Restante a Pagar' : 'Total a Lançar/Pagar'}</p>
-                <p className="text-[34px] font-black text-slate-900 dark:text-white leading-none">R$ {currentTableBalance.toFixed(2)}</p>
+                <p className="text-[34px] font-black text-slate-900 dark:text-white leading-none">R$ {(Number(currentTableBalance) || 0).toFixed(2)}</p>
               </div>
               {orderMode === 'TABLE' && tableNumber && openTables[tableNumber] && (
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mb-1">Dívida da Mesa</p>
-                  <p className="text-[16px] font-black text-slate-900 dark:text-white">R$ {(openTables[tableNumber].total - openTables[tableNumber].paidAmount).toFixed(2)}</p>
+                  <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mb-1">Total da Mesa</p>
+                  <p className="text-[16px] font-black text-slate-900 dark:text-white">R$ {(Number(openTables[tableNumber].totalAmount) || 0).toFixed(2)}</p>
                 </div>
               )}
               {orderMode === 'DIRECT' && directPaidAmount > 0 && (
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1">Pago: R$ {directPaidAmount.toFixed(2)}</p>
-                  <p className="text-[12px] font-black text-slate-400 uppercase">Original: R$ {total.toFixed(2)}</p>
+                  <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1">Pago: R$ {(Number(directPaidAmount) || 0).toFixed(2)}</p>
+                  <p className="text-[12px] font-black text-slate-400 uppercase">Original: R$ {(Number(total) || 0).toFixed(2)}</p>
                 </div>
               )}
             </div>
@@ -571,7 +755,14 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
           <SplitBillModal
             isOpen={isSplitModalOpen}
             onClose={() => setIsSplitModalOpen(false)}
-            tableData={openTables[tableNumber]}
+            tableData={{
+              id: openTables[tableNumber].id,
+              tableNumber: openTables[tableNumber].tableNumber,
+              items: openTables[tableNumber].items.map(item => ({
+                product: item.product,
+                qty: item.quantity
+              }))
+            }}
             onConfirm={handleSplitConfirm}
           />
         )}
@@ -582,6 +773,29 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
           onConfirm={handleResetPDV}
           title="Limpar Operação"
           message="Deseja limpar o carrinho e desvincular o atendimento atual?"
+        />
+
+        <NewClientModal
+          isOpen={isNewClientModalOpen}
+          onClose={() => setIsNewClientModalOpen(false)}
+          onSuccess={(client) => {
+            // Convert to User type and select
+            const user: User = {
+              id: client.id,
+              name: client.name,
+              email: client.email || '',
+              role: 'CLIENT',
+              department: 'External',
+              status: 'active',
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name)}&background=random`,
+              points: client.points || 0,
+              level: 'Prata',
+              cpf: client.cpf,
+              phone: client.phone
+            };
+            setSelectedUser(user);
+            addToast(`Cliente ${client.name} cadastrado e selecionado!`, 'success');
+          }}
         />
       </div>
     </div>

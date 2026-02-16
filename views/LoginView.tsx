@@ -1,50 +1,41 @@
 
 import React, { useState } from 'react';
 import { User } from '../types';
+import { authService } from '../services/authService';
 
 interface LoginViewProps {
     onLogin: (user: User) => void;
 }
 
-// Mock Users for Testing
-const MOCK_ADMIN_USER: User = {
-    id: 'u1',
-    name: 'Administrador Geral',
-    email: 'admin@arenad65.com',
-    role: 'admin',
-    department: 'Gestão',
-    status: 'active',
-    avatar: 'https://ui-avatars.com/api/?name=Admin+Geral&background=0F172A&color=fff',
-};
 
-const MOCK_STAFF_USER: User = {
-    id: 'u2',
-    name: 'Usuário Staff',
-    email: 'staff@arenad65.com',
-    role: 'staff',
-    department: 'Operacional',
-    status: 'active',
-    avatar: 'https://ui-avatars.com/api/?name=Usuario+Staff&background=2563EB&color=fff',
-};
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const [error, setError] = useState('');
+
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
 
-        // Simulating API call
-        setTimeout(() => {
-            if (email.includes('admin')) {
-                onLogin(MOCK_ADMIN_USER);
+        try {
+            const { user } = await authService.login(email, password);
+            onLogin(user);
+        } catch (err: any) {
+            console.error(err);
+            if (err.response) {
+                setError(err.response.data.message || 'Erro no servidor: ' + err.response.status);
+            } else if (err.request) {
+                setError('Erro de conexão. Verifique se o backend está rodando.');
             } else {
-                onLogin(MOCK_STAFF_USER);
+                setError('Erro desconhecido: ' + err.message);
             }
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -57,7 +48,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
 
                 <div className="relative z-10 flex flex-col items-center text-center">
                     <img
-                        src="/logo_arena_transp.png"
+                        src="./logo_arena_transp.png"
                         alt="Arena D65 Logo"
                         className="w-full max-w-[400px] object-contain drop-shadow-2xl mb-8 animate-fadeIn"
                     />
@@ -78,13 +69,20 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
 
                     <div className="text-center lg:text-left">
                         <div className="lg:hidden flex justify-center mb-6">
-                            <img src="/logo_arena_cor.png" alt="Arena D65" className="h-16 object-contain" />
+                            <img src="./logo_arena_cor.png" alt="Arena D65" className="h-16 object-contain" />
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Bem-vindo de volta</h1>
                         <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Faça login para acessar o painel de controle.</p>
                     </div>
 
+
+
                     <form onSubmit={handleLogin} className="space-y-6">
+                        {error && (
+                            <div className="p-4 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-100 animate-fadeIn">
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider pl-1">Email Corporativo</label>
                             <input
@@ -119,25 +117,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                         </button>
                     </form>
 
-                    <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Ambiente de Teste (Mock)</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                onClick={() => onLogin(MOCK_ADMIN_USER)}
-                                className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all group"
-                            >
-                                <span className="size-2 rounded-full bg-slate-900 dark:bg-white"></span>
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Admin</span>
-                            </button>
-                            <button
-                                onClick={() => onLogin(MOCK_STAFF_USER)}
-                                className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all group"
-                            >
-                                <span className="size-2 rounded-full bg-blue-500"></span>
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Staff</span>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 

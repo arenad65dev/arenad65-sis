@@ -31,15 +31,15 @@ const CashierInfoModal: React.FC<CashierInfoModalProps> = ({ isOpen, onClose, se
                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
                         <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abertura</span>
-                            <span className="text-sm font-black dark:text-white">{session?.openedAt}</span>
+                            <span className="text-sm font-black dark:text-white">{session?.openedAt ? new Date(session.openedAt).toLocaleString('pt-BR') : 'N/A'}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Operador</span>
-                            <span className="text-sm font-black dark:text-white">{session?.openedBy}</span>
+                            <span className="text-sm font-black dark:text-white">{session?.user?.name || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fundo Inicial</span>
-                            <span className="text-lg font-black text-green-600 dark:text-green-400">R$ {session?.initialBalance.toFixed(2)}</span>
+                            <span className="text-lg font-black text-green-600 dark:text-green-400">R$ {Number(session?.initialBalance || 0).toFixed(2)}</span>
                         </div>
                     </div>
 

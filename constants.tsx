@@ -90,11 +90,15 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 12.00,
     purchasePrice: 6.50,
     margin: 84.62,
-    category: 'Bebidas',
+    category: {
+      id: 'cat-1',
+      name: 'Bebidas',
+      type: 'PRODUCT'
+    },
     sku: 'BEER-H-01',
     stock: 12,
     minStock: 50,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC7usK6HkWzvL1exiZF_aT2ACzwQ5e-LkQyh1VTXrqpGesY1R-KxOrLIQUehyB8IeVJPuiLs7Zsl9pFUlgY7XMrOFeiQZWmPLFwX9fvlGtdyF7Ga-IaQQ81g1Bc7QZ0y2Iqt22D_AxFLIjbGbqto_aXqkPMz-JGSnjGSiXRFeeIU1gC9EAe49TqdHRxX34-ed3syBVUU6ISQ30sFQoKEoCcd_stRa-vy7Byi7YQSXriYw1Sw2VTdcH_isxtn2-Byf2MXvzIyhSrLRw'
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC7usK6HkWzvL1exiZF_aT2ACzwQ5e-LkQyh1VTXrqpGesY1R-KxOrLIQUehyB8IeVJPuiLs7Zsl9pFUlgY7XMrOFeiQZWmPLFwX9fvlGtdyF7Ga-IaQQ81g1Bc7QZ0y2Iqt22D_AxFLIjbGbqto_aXqkPMz-JGSnjGSiXRFeeIU1gC9EAe49TqdHRxX34-ed3syBVUU6ISQ30sFQoKEoCcd_stRa-vy7Byi7YQSXriYw1Sw2VTdcH_isxtn2-Byf2MXvzIyhSrLRw'
   }
 ];
 
@@ -104,11 +108,6 @@ export const MOCK_LOGS: Log[] = [];
 
 export const NAV_ITEMS = [
   { id: Module.DASHBOARD, icon: 'dashboard' },
-  { id: Module.FINANCE, icon: 'attach_money' },
   { id: Module.POS, icon: 'point_of_sale', label: 'Bar / PDV' },
-  { id: Module.COURTS, icon: 'sports_tennis', label: 'Instalações' },
   { id: Module.INVENTORY, icon: 'inventory_2', label: 'Estoque' },
-  { id: Module.CRM, icon: 'diversity_3', label: 'Marketing' },
-  { id: Module.REPORTS, icon: 'monitoring', label: 'Intel. Negócio' },
-  { id: Module.USERS, icon: 'group', label: 'Usuários' },
 ];

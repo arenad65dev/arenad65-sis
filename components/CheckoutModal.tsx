@@ -47,20 +47,20 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onConfir
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fadeIn" onClick={onClose}></div>
 
       <div className="relative bg-white dark:bg-surface-dark w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-fadeIn flex flex-col border border-white/10 mb-10">
-        <div className="px-8 pt-8 pb-4 flex justify-between items-start bg-slate-50/30 dark:bg-slate-900/10 shrink-0">
+        <div className="px-5 py-6 md:px-8 md:pt-8 md:pb-4 flex justify-between items-start bg-slate-50/30 dark:bg-slate-900/10 shrink-0">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Checkout</h2>
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Checkout</h2>
             <div className="inline-flex px-3 py-1 bg-blue-100/50 text-blue-600 dark:bg-blue-900/40 text-[10px] font-black uppercase rounded-lg border border-blue-200/50 dark:border-blue-800 tracking-widest self-start">
               {tableNumber ? `Mesa ${tableNumber}` : 'Venda Balcão'}
             </div>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">R$ {totalBalance.toFixed(2)}</p>
+            <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">R$ {(Number(totalBalance) || 0).toFixed(2)}</p>
           </div>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-5 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo</label>
@@ -85,13 +85,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onConfir
 
           <div className="grid grid-cols-3 gap-2">
             {['PIX', 'CARTÃO', 'DINHEIRO'].map(opt => (
-              <button key={opt} onClick={() => setPaymentMethod(opt)} className={`h-16 rounded-2xl border-2 font-black text-[9px] uppercase tracking-widest transition-all ${paymentMethod === opt ? 'border-primary bg-primary/5 text-primary-dark shadow-sm' : 'border-slate-100 dark:border-slate-800 text-slate-300 hover:border-slate-200'}`}>{opt}</button>
+              <button key={opt} onClick={() => setPaymentMethod(opt)} className={`h-16 rounded-2xl border-2 font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all ${paymentMethod === opt ? 'border-primary bg-primary/5 text-primary-dark shadow-sm' : 'border-slate-100 dark:border-slate-800 text-slate-300 hover:border-slate-200'}`}>{opt}</button>
             ))}
           </div>
 
           <div className="pt-4 flex gap-3">
             <button onClick={onClose} className="flex-1 h-14 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-black text-[11px] uppercase tracking-widest rounded-2xl text-slate-500">Voltar</button>
-            <button disabled={amountToPay <= 0} onClick={() => onConfirm({ paymentMethod, orderType: 'VENDA', table: tableNumber || '', clientId: selectedPayer?.id || '', amountToPay, isPartial: paymentMode === 'PARTIAL' })} className="flex-[1.5] h-14 bg-primary text-slate-900 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">Pagar R$ {amountToPay.toFixed(2)}</button>
+            <button disabled={amountToPay <= 0} onClick={() => onConfirm({ paymentMethod, orderType: 'VENDA', table: tableNumber || '', clientId: selectedPayer?.id || '', amountToPay, isPartial: paymentMode === 'PARTIAL' })} className="flex-[1.5] h-14 bg-primary text-slate-900 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">Pagar R$ {(Number(amountToPay) || 0).toFixed(2)}</button>
           </div>
         </div>
       </div>
