@@ -93,6 +93,7 @@ export class CashierController {
             const data = recordSkimmingSchema.parse(request.body);
             const result = await CashierService.recordSkimming({
                 sessionId: currentSession.id,
+                userId: userId,
                 amount: data.amount,
                 reason: data.reason
             });

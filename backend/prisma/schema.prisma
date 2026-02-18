@@ -80,6 +80,7 @@ model User {
   logs            ActivityLog[]
   stockMovements  StockMovement[]
   permissions     Permission[]
+  skimmings       Skimming[]
 }
 
 model Permission {
@@ -233,6 +234,9 @@ model Skimming { // Sangria
   id              String         @id @default(uuid())
   sessionId       String
   session         CashierSession @relation(fields: [sessionId], references: [id])
+  
+  userId          String?        // Who made the skimming
+  user            User?          @relation(fields: [userId], references: [id])
   
   amount          Decimal        @db.Decimal(10, 2)
   reason          String

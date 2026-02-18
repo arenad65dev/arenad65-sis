@@ -90,6 +90,7 @@ export class CashierService {
     // Record skimming (cash withdrawal)
     static async recordSkimming(data: {
         sessionId: string;
+        userId: string;
         amount: number;
         reason: string;
     }) {
@@ -106,13 +107,22 @@ export class CashierService {
             throw new Error('Não é possível registrar sangria em uma sessão fechada');
         }
 
-        // Create skimming record
+        // Create skimming record with userId
         const skimming = await prisma.skimming.create({
             data: {
                 sessionId: data.sessionId,
+                userId: data.userId,
                 amount: data.amount,
                 reason: data.reason,
                 createdAt: new Date()
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             }
         });
 
