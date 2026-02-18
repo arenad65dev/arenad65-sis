@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Development
+.git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+
+# Backend (not needed for frontend build)
+backend/
+plans/
+future/
+docs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

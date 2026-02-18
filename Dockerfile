@@ -1,14 +1,33 @@
-# Frontend Dockerfile (na raiz do projeto)
+# Frontend Dockerfile (monorepo - raiz)
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copiar apenas arquivos necessários para build
 COPY package*.json ./
+COPY package-lock.json ./
+COPY vite.config.ts ./
+COPY tsconfig.json ./
+COPY index.html ./
+COPY App.tsx ./
+COPY constants.tsx ./
+COPY types.ts ./
+COPY index.tsx ./
+COPY metadata.json ./
+COPY components/ ./components/
+COPY hooks/ ./hooks/
+COPY services/ ./services/
+COPY views/ ./views/
+COPY public/ ./public/
+COPY vite-env.d.ts ./
+
+# Instalar dependências
 RUN npm ci
 
-COPY . .
+# Build
 RUN npm run build
 
+# Nginx
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
