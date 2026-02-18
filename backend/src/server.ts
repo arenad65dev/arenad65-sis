@@ -16,7 +16,9 @@ import { prisma } from './lib/prisma';
 // Plugins
 server.register(cors, {
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 });
 
 import { authRoutes } from './routes/auth';
