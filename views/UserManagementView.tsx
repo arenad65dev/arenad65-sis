@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { userService, User } from '../services/userService';
+import React, { useState, useEffect, useCallback } from 'react';
+import { userService, User, Permission, ActivityLog } from '../services/userService';
 
 interface Toast {
   id: number;
@@ -12,12 +12,37 @@ interface UserPermissions {
   [key: string]: boolean;
 }
 
+const MODULES = [
+  { 
+    group: 'Financeiro', 
+    icon: 'payments', 
+    items: ['Acesso Total', 'Apenas Visualização', 'Relatórios Fiscais'] 
+  },
+  { 
+    group: 'Bar / PDV', 
+    icon: 'point_of_sale', 
+    items: ['Realizar Vendas', 'Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços'] 
+  },
+  { 
+    group: 'Instalações', 
+    icon: 'stadium', 
+    items: ['Gerenciar Reservas', 'Visualizar Grade', 'Bloqueio de Quadras'] 
+  },
+  { 
+    group: 'Usuários', 
+    icon: 'people', 
+    items: ['Acesso Total', 'Criar Usuários', 'Editar Permissões'] 
+  },
+];
+
 const UserManagementView: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('Todos');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userLogs, setUserLogs] = useState<ActivityLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
   const [showLogsView, setShowLogsView] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -31,10 +56,7 @@ const UserManagementView: React.FC = () => {
     department: ''
   });
 
-  const [permissions, setPermissions] = useState<UserPermissions>({
-    'Financeiro_Acesso Total': true,
-    'Bar / PDV_Realizar Vendas': true,
-  });
+  const [permissions, setPermissions] = useState<UserPermissions>({});
 
   const addToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now();
@@ -58,6 +80,34 @@ const UserManagementView: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const loadUserDetails = useCallback(async (userId: string) => {
+    try {
+      const userData = await userService.getUser(userId);
+      setSelectedUser(userData);
+      
+      // Load permissions
+      const perms: UserPermissions = {};
+      userData.permissions?.forEach((p: Permission) => {
+        perms[`${p.module}_${p.action}`] = Boolean(p.granted);
+      });
+      setPermissions(perms);
+
+      // Load logs
+      setLogsLoading(true);
+      const logs = await userService.getUserLogs(userId, 20);
+      setUserLogs(logs);
+      setLogsLoading(false);
+    } catch (error) {
+      console.error('Error loading user details:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserDetails(selectedUser.id);
+    }
+  }, [selectedUser?.id, loadUserDetails]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +141,18 @@ const UserManagementView: React.FC = () => {
   };
 
   const handleToggleStatus = async (user: User) => {
-    const newStatus = user.isActive ? 'inactive' : 'active';
     try {
-      await userService.updateUser(user.id, { isActive: newStatus === 'active' });
-      addToast(`Status alterado para ${newStatus === 'active' ? 'Ativo' : 'Inativo'}`, 'success');
+      if (user.isActive) {
+        await userService.deleteUser(user.id);
+        addToast('Usuário desativado', 'success');
+      } else {
+        await userService.reactivateUser(user.id);
+        addToast('Usuário reativado', 'success');
+      }
       loadUsers();
       if (selectedUser?.id === user.id) {
-        setSelectedUser({ ...user, isActive: newStatus === 'active' });
+        const updated = { ...user, isActive: !user.isActive };
+        setSelectedUser(updated);
       }
     } catch (error: any) {
       addToast('Erro ao alterar status', 'error');
@@ -116,18 +171,51 @@ const UserManagementView: React.FC = () => {
     }
   };
 
-  const handleResetPassword = (user: User) => {
-    addToast(`Link de recuperação enviado para ${user.email}`, 'success');
+  const handleResetPassword = async (user: User) => {
+    try {
+      await userService.requestPasswordReset(user.email);
+      addToast(`Link de recuperação enviado para ${user.email}`, 'success');
+    } catch (error) {
+      addToast('Erro ao enviar link de recuperação', 'error');
+    }
   };
 
-  const togglePermission = (key: string) => {
-    setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+  const togglePermission = async (key: string) => {
+    if (!selectedUser) return;
+    
+    const newValue = !permissions[key];
+    const [module, action] = key.split('_');
+    
+    try {
+      await userService.updatePermission(selectedUser.id, { module, action, granted: newValue });
+      setPermissions(prev => ({ ...prev, [key]: newValue }));
+      addToast('Permissão atualizada!', 'success');
+    } catch (error) {
+      addToast('Erro ao atualizar permissão', 'error');
+    }
+  };
+
+    const saveAllPermissions = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      const perms: { module: string; action: string; granted: boolean }[] = [];
+      Object.entries(permissions).forEach(([key, granted]) => {
+        const [module, action] = key.split('_');
+        perms.push({ module, action, granted });
+      });
+      
+      await userService.bulkUpdatePermissions(selectedUser.id, perms);
+      addToast('Permissões salvas!', 'success');
+    } catch (error) {
+      addToast('Erro ao salvar permissões', 'error');
+    }
   };
 
   const selectAllInGroup = (group: string, items: string[]) => {
-    const newState = { ...permissions };
-    items.forEach(item => { newState[`${group}_${item}`] = true; });
-    setPermissions(newState);
+    const newPerms = { ...permissions };
+    items.forEach(item => { newPerms[`${group}_${item}`] = true; });
+    setPermissions(newPerms);
   };
 
   const filteredUsers = users.filter(user => {
@@ -137,7 +225,7 @@ const UserManagementView: React.FC = () => {
     return deptMatch && searchMatch;
   });
 
-  const departments = ['Todos', 'Administrativo', 'Bar / PDV', 'Financeiro'];
+  const departments = ['Todos', 'Administrativo', 'Bar / PDV', 'Financeiro', 'Operacional'];
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-full lg:overflow-hidden">
@@ -220,7 +308,11 @@ const UserManagementView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredUsers.map(user => (
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-400">Carregando...</td>
+                </tr>
+              ) : filteredUsers.map(user => (
                 <tr
                   key={user.id}
                   onClick={() => { setSelectedUser(user); setShowLogsView(false); }}
@@ -291,7 +383,7 @@ const UserManagementView: React.FC = () => {
               ))}
             </tbody>
           </table>
-          {filteredUsers.length === 0 && (
+          {filteredUsers.length === 0 && !loading && (
             <div className="flex flex-col items-center justify-center py-20 opacity-20">
               <span className="material-symbols-outlined text-6xl mb-2">person_off</span>
               <p className="font-black uppercase tracking-widest text-xs">Nenhum colaborador encontrado</p>
@@ -343,11 +435,7 @@ const UserManagementView: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-6 md:p-8">
               {!showLogsView ? (
                 <div className="space-y-10">
-                  {[
-                    { group: 'Financeiro', icon: 'payments', items: ['Acesso Total', 'Apenas Visualização', 'Relatórios Fiscais'] },
-                    { group: 'Bar / PDV', icon: 'point_of_sale', items: ['Realizar Vendas', 'Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços'] },
-                    { group: 'Instalações', icon: 'stadium', items: ['Gerenciar Reservas', 'Visualizar Grade', 'Bloqueio de Quadras'] },
-                  ].map((section) => (
+                  {MODULES.map((section) => (
                     <div key={section.group}>
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
@@ -383,29 +471,39 @@ const UserManagementView: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Últimas Atividades</h4>
-                  {[
-                    { action: 'Abriu Caixa PDV', module: 'BAR', time: 'Hoje, 08:00' },
-                    { action: 'Registrou Venda #882', module: 'BAR', time: 'Hoje, 09:15' },
-                    { action: 'Editou Reserva Quadra 2', module: 'COURTS', time: 'Hoje, 10:30' },
-                    { action: 'Cancelou Item Venda #882', module: 'BAR', time: 'Hoje, 11:20', critical: true },
-                  ].map((log, i) => (
-                    <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className={`text-xs font-black ${log.critical ? 'text-red-500' : 'text-slate-900'}`}>{log.action}</span>
-                        <span className="text-[8px] px-1.5 py-0.5 bg-slate-200 rounded text-slate-500 uppercase font-black">{log.module}</span>
+                  {logsLoading ? (
+                    <p className="text-slate-400 text-sm">Carregando...</p>
+                  ) : userLogs.length > 0 ? (
+                    userLogs.map((log) => (
+                      <div key={log.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-xs font-black text-slate-900">{log.details || log.action}</span>
+                          <span className="text-[8px] px-1.5 py-0.5 bg-slate-200 rounded text-slate-500 uppercase font-black">{log.module}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold">
+                          {new Date(log.createdAt).toLocaleString('pt-BR')}
+                        </p>
                       </div>
-                      <p className="text-[10px] text-slate-400 font-bold">{log.time}</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-slate-400 text-sm">Nenhum registro de atividade</p>
+                  )}
                 </div>
               )}
             </div>
 
             <div className="p-6 md:p-8 bg-slate-50/50 border-t border-slate-100 flex gap-3">
-              <button className="flex-1 py-4 bg-primary hover:bg-primary-dark text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all">Salvar Acessos</button>
-              <button className="px-5 py-4 bg-white border border-slate-200 font-black text-[10px] uppercase tracking-widest rounded-2xl text-slate-500 hover:bg-slate-50 transition-all">Cancelar</button>
+              <button 
+                onClick={saveAllPermissions}
+                className="flex-1 py-4 bg-primary hover:bg-primary-dark text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all"
+              >
+                Salvar Acessos
+              </button>
+              <button className="px-5 py-4 bg-white border border-slate-200 font-black text-[10px] uppercase tracking-widest rounded-2xl text-slate-500 hover:bg-slate-50 transition-all">
+                Cancelar
+              </button>
             </div>
           </>
         ) : (

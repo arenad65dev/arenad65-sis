@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
-import { requireAdmin, requireManager } from '../middlewares/auth';
+import { requireAdmin, requireManager, authenticate } from '../middlewares/auth';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 const createUserSchema = z.object({
     name: z.string().min(1),
@@ -22,13 +23,162 @@ const updateUserSchema = z.object({
     isActive: z.boolean().optional()
 });
 
+const permissionSchema = z.object({
+    module: z.string(),
+    action: z.string(),
+    granted: z.boolean()
+});
+
+async function logActivity(prisma: any, userId: string, action: string, module: string, description?: string, metadata?: any) {
+    await prisma.activityLog.create({
+        data: {
+            userId,
+            action,
+            module,
+            details: description,
+            metadata
+        }
+    });
+}
+
 export async function userRoutes(fastify: FastifyInstance) {
     // All routes require authentication
     fastify.addHook('onRequest', requireManager);
 
+    // Get current user permissions
+    fastify.get('/me/permissions', async (request, reply) => {
+        try {
+            // @ts-ignore
+            const userId = request.user?.id;
+            
+            const permissions = await prisma.permission.findMany({
+                where: { userId }
+            });
+            
+            return reply.send(permissions);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error fetching permissions' });
+        }
+    });
+
+    // Get all permissions for a user
+    fastify.get('/:id/permissions', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string };
+            
+            const permissions = await prisma.permission.findMany({
+                where: { userId: id }
+            });
+            
+            return reply.send(permissions);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error fetching permissions' });
+        }
+    });
+
+    // Update user permissions
+    fastify.put('/:id/permissions', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string };
+            const data = permissionSchema.parse(request.body);
+            // @ts-ignore
+            const currentUserId = request.user?.id;
+
+            const permission = await prisma.permission.upsert({
+                where: {
+                    userId_module_action: {
+                        userId: id,
+                        module: data.module,
+                        action: data.action
+                    }
+                },
+                create: {
+                    userId: id,
+                    module: data.module,
+                    action: data.action,
+                    granted: data.granted
+                },
+                update: {
+                    granted: data.granted
+                }
+            });
+
+            await logActivity(prisma, currentUserId, 'UPDATE_PERMISSION', 'Usuários', 
+                `Alterou permissão ${data.module}/${data.action} para ${data.granted ? 'ATIVADO' : 'DESATIVADO'}`);
+
+            return reply.send(permission);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error updating permission' });
+        }
+    });
+
+    // Bulk update permissions
+    fastify.put('/:id/permissions/bulk', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string };
+            const permissions = request.body as { module: string, action: string, granted: boolean }[];
+            // @ts-ignore
+            const currentUserId = request.user?.id;
+
+            for (const perm of permissions) {
+                await prisma.permission.upsert({
+                    where: {
+                        userId_module_action: {
+                            userId: id,
+                            module: perm.module,
+                            action: perm.action
+                        }
+                    },
+                    create: {
+                        userId: id,
+                        module: perm.module,
+                        action: perm.action,
+                        granted: perm.granted
+                    },
+                    update: {
+                        granted: perm.granted
+                    }
+                });
+            }
+
+            await logActivity(prisma, currentUserId, 'BULK_UPDATE_PERMISSIONS', 'Usuários', 
+                `Atualizou ${permissions.length} permissões do usuário`);
+
+            return reply.send({ message: 'Permissions updated' });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error updating permissions' });
+        }
+    });
+
+    // Get user activity logs
+    fastify.get('/:id/logs', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string };
+            const { limit = '50' } = request.query as { limit?: string };
+            
+            const logs = await prisma.activityLog.findMany({
+                where: { userId: id },
+                orderBy: { createdAt: 'desc' },
+                take: parseInt(limit)
+            });
+            
+            return reply.send(logs);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error fetching logs' });
+        }
+    });
+
     // List all users
     fastify.get('/', async (request, reply) => {
         try {
+            // @ts-ignore
+            const currentUserId = request.user?.id;
+
             const users = await prisma.user.findMany({
                 select: {
                     id: true,
@@ -43,7 +193,20 @@ export async function userRoutes(fastify: FastifyInstance) {
                 },
                 orderBy: { name: 'asc' }
             });
-            return reply.send(users);
+
+            // Get permissions for all users
+            const userIds = users.map(u => u.id);
+            const permissions = await prisma.permission.findMany({
+                where: { userId: { in: userIds } }
+            });
+
+            // Attach permissions to users
+            const usersWithPermissions = users.map(user => ({
+                ...user,
+                permissions: permissions.filter(p => p.userId === user.id)
+            }));
+
+            return reply.send(usersWithPermissions);
         } catch (error) {
             request.log.error(error);
             return reply.status(500).send({ message: 'Error fetching users' });
@@ -73,7 +236,11 @@ export async function userRoutes(fastify: FastifyInstance) {
                 return reply.status(404).send({ message: 'User not found' });
             }
 
-            return reply.send(user);
+            const permissions = await prisma.permission.findMany({
+                where: { userId: id }
+            });
+
+            return reply.send({ ...user, permissions });
         } catch (error) {
             request.log.error(error);
             return reply.status(500).send({ message: 'Error fetching user' });
@@ -83,8 +250,9 @@ export async function userRoutes(fastify: FastifyInstance) {
     // Create user (admin only)
     fastify.post('/', async (request, reply) => {
         try {
-            // @ts-ignore - JWT user
+            // @ts-ignore
             const currentUserRole = request.user?.role;
+            const currentUserId = request.user?.id;
             
             if (currentUserRole !== 'ADMIN') {
                 return reply.status(403).send({ message: 'Only admins can create users' });
@@ -92,7 +260,6 @@ export async function userRoutes(fastify: FastifyInstance) {
 
             const data = createUserSchema.parse(request.body);
             
-            // Check if email already exists
             const existingUser = await prisma.user.findUnique({
                 where: { email: data.email }
             });
@@ -101,7 +268,6 @@ export async function userRoutes(fastify: FastifyInstance) {
                 return reply.status(400).send({ message: 'Email already in use' });
             }
 
-            // Hash password
             const bcrypt = require('bcryptjs');
             const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -126,6 +292,9 @@ export async function userRoutes(fastify: FastifyInstance) {
                 }
             });
 
+            await logActivity(prisma, currentUserId!, 'CREATE_USER', 'Usuários', 
+                `Criou novo usuário: ${user.name} (${user.email})`);
+
             return reply.status(201).send(user);
         } catch (error) {
             request.log.error(error);
@@ -143,8 +312,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         try {
             const { id } = request.params as { id: string };
             const data = updateUserSchema.parse(request.body);
+            // @ts-ignore
+            const currentUserId = request.user?.id;
 
-            // If updating password, hash it
             if (data.password) {
                 const bcrypt = require('bcryptjs');
                 data.password = await bcrypt.hash(data.password, 10);
@@ -165,6 +335,9 @@ export async function userRoutes(fastify: FastifyInstance) {
                 }
             });
 
+            await logActivity(prisma, currentUserId!, 'UPDATE_USER', 'Usuários', 
+                `Atualizou dados do usuário: ${user.name}`);
+
             return reply.send(user);
         } catch (error) {
             request.log.error(error);
@@ -181,8 +354,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     fastify.delete('/:id', async (request, reply) => {
         try {
             const { id } = request.params as { id: string };
-
-            // @ts-ignore - JWT user
+            // @ts-ignore
             const currentUserId = request.user?.id;
             
             if (currentUserId === id) {
@@ -200,6 +372,9 @@ export async function userRoutes(fastify: FastifyInstance) {
                 }
             });
 
+            await logActivity(prisma, currentUserId!, 'DEACTIVATE_USER', 'Usuários', 
+                `Desativou usuário: ${user.name}`);
+
             return reply.send(user);
         } catch (error) {
             request.log.error(error);
@@ -211,6 +386,8 @@ export async function userRoutes(fastify: FastifyInstance) {
     fastify.post('/:id/reactivate', async (request, reply) => {
         try {
             const { id } = request.params as { id: string };
+            // @ts-ignore
+            const currentUserId = request.user?.id;
 
             const user = await prisma.user.update({
                 where: { id },
@@ -223,10 +400,102 @@ export async function userRoutes(fastify: FastifyInstance) {
                 }
             });
 
+            await logActivity(prisma, currentUserId!, 'REACTIVATE_USER', 'Usuários', 
+                `Reativou usuário: ${user.name}`);
+
             return reply.send(user);
         } catch (error) {
             request.log.error(error);
             return reply.status(500).send({ message: 'Error reactivating user' });
+        }
+    });
+
+    // Reset password - send reset email
+    fastify.post('/reset-password', async (request, reply) => {
+        try {
+            const { email } = request.body as { email: string };
+
+            const user = await prisma.user.findUnique({
+                where: { email }
+            });
+
+            if (!user) {
+                return reply.send({ message: 'Se o email existir, você receberá um link de recuperação' });
+            }
+
+            const resetToken = crypto.randomUUID();
+            const resetTokenExpires = new Date(Date.now() + 3600000);
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    preferences: {
+                        ...(user.preferences as object || {}),
+                        resetToken,
+                        resetTokenExpires
+                    }
+                }
+            });
+
+            const resetLink = `https://sis.arenad65.cloud/reset-password?token=${resetToken}&email=${email}`;
+            
+            console.log('========== PASSWORD RESET ==========');
+            console.log(`Email: ${email}`);
+            console.log(`Link: ${resetLink}`);
+            console.log('=====================================');
+
+            return reply.send({ message: 'Se o email existir, você receberá um link de recuperação' });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error requesting password reset' });
+        }
+    });
+
+    // Confirm password reset
+    fastify.post('/reset-password/confirm', async (request, reply) => {
+        try {
+            const { token, email, newPassword } = request.body as { token: string, email: string, newPassword: string };
+
+            const user = await prisma.user.findFirst({
+                where: { 
+                    email,
+                    preferences: {
+                        path: ['resetToken'],
+                        equals: token
+                    }
+                }
+            });
+
+            if (!user) {
+                return reply.status(400).send({ message: 'Token inválido ou expirado' });
+            }
+
+            const preferences = user.preferences as any;
+            const tokenExpires = preferences?.resetTokenExpires;
+
+            if (!tokenExpires || new Date(tokenExpires) < new Date()) {
+                return reply.status(400).send({ message: 'Token expirado' });
+            }
+
+            const bcrypt = require('bcryptjs');
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    password: hashedPassword,
+                    preferences: {
+                        ...(preferences || {}),
+                        resetToken: null,
+                        resetTokenExpires: null
+                    }
+                }
+            });
+
+            return reply.send({ message: 'Senha alterada com sucesso!' });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Error resetting password' });
         }
     });
 }
