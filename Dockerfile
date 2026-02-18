@@ -1,3 +1,4 @@
+# Frontend Dockerfile (na raiz do projeto)
 FROM node:20-alpine AS builder
 
 WORKDIR /app
