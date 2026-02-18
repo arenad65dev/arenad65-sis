@@ -2,7 +2,9 @@ import axios from 'axios';
 
 const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+    const url = import.meta.env.VITE_API_URL;
+    // Adicionar /api se for uma URL completa e não tiver o caminho
+    return url.endsWith('/api') ? url : `${url}/api`;
   }
   // Em produção usa proxy nginx (/api), em desenvolvimento localhost
   return window.location.hostname === 'localhost' 
