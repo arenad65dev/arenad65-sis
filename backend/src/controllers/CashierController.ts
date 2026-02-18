@@ -155,4 +155,18 @@ export class CashierController {
             });
         }
     }
+
+    // Get global open session (any user can see)
+    static async getOpenSession(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const session = await CashierService.getOpenSession();
+            
+            return reply.send(session);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({
+                message: 'Erro ao buscar status do caixa'
+            });
+        }
+    }
 }

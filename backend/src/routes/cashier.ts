@@ -56,6 +56,9 @@ export async function cashierRoutes(fastify: FastifyInstance) {
     // Get current session for user
     fastify.get('/current', CashierController.getCurrentSession);
 
+    // Get ANY open session (global status - for cashier lock)
+    fastify.get('/open', CashierController.getOpenSession);
+
     // Get all sessions for user
     fastify.get('/sessions', {
         schema: {

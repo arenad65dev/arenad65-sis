@@ -7,16 +7,24 @@ export class CashierService {
         userId: string;
         initialBalance: number;
     }) {
-        // Check if there's already an open session
+        // Check if there's ANY open session (only one cashier allowed)
         const existingOpenSession = await prisma.cashierSession.findFirst({
             where: {
-                userId: data.userId,
                 status: CashierStatus.OPEN
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
             }
         });
 
         if (existingOpenSession) {
-            throw new Error('Já existe uma sessão de caixa aberta para este usuário');
+            throw new Error(`Já existe um caixa aberto por ${existingOpenSession.user.name} desde ${new Date(existingOpenSession.openedAt).toLocaleString('pt-BR')}. Feche-o antes de abrir um novo.`);
         }
 
         // Create new cashier session
@@ -214,6 +222,32 @@ export class CashierService {
         if (!session) {
             throw new Error('Sessão de caixa não encontrada');
         }
+
+        return session;
+    }
+
+    // Get ANY open session (global status)
+    static async getOpenSession() {
+        const session = await prisma.cashierSession.findFirst({
+            where: {
+                status: CashierStatus.OPEN
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true
+                    }
+                },
+                skimmings: {
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                }
+            }
+        });
 
         return session;
     }
