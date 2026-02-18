@@ -232,8 +232,9 @@ export class InventoryService {
         type?: string;
         isActive?: boolean;
     }) {
+        const cleanSku = data.sku?.trim() || null;
+
         if (data.id) {
-            // Atualizar
             return prisma.product.update({
                 where: { id: data.id },
                 data: {
@@ -245,7 +246,7 @@ export class InventoryService {
                     stock: data.stock,
                     minStock: data.minStock,
                     unit: data.unit,
-                    sku: data.sku,
+                    sku: cleanSku,
                     imageUrl: data.imageUrl,
                     categoryId: data.categoryId,
                     type: data.type as ProductType,
@@ -254,7 +255,6 @@ export class InventoryService {
                 include: { category: true }
             });
         } else {
-            // Criar
             return prisma.product.create({
                 data: {
                     name: data.name,
@@ -265,7 +265,7 @@ export class InventoryService {
                     stock: data.stock || 0,
                     minStock: data.minStock || 5,
                     unit: data.unit || 'UN',
-                    sku: data.sku,
+                    sku: cleanSku,
                     imageUrl: data.imageUrl,
                     categoryId: data.categoryId,
                     type: (data.type || 'PRODUCT') as ProductType,
