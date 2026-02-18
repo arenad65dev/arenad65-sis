@@ -13,7 +13,7 @@ interface SidebarProps {
 }
 
 const MODULE_PERMISSIONS: Record<Module, { module: string; action: string }[]> = {
-  [Module.DASHBOARD]: [], // Dashboard is always accessible
+  [Module.DASHBOARD]: [], // Dashboard requires manager+ role (checked separately)
   [Module.POS]: [
     { module: 'Bar / PDV', action: 'Realizar Vendas' },
     { module: 'Bar / PDV', action: 'Abertura/Fechamento de Caixa' },
@@ -61,16 +61,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule, isOpen
   const hasPermission = (moduleId: Module): boolean => {
     if (!currentUser) return true;
     
-    // Admin has access to everything
-    if (currentUser.role === 'ADMIN') return true;
+    const role = currentUser.role.toLowerCase();
     
-    // Dashboard is always accessible
-    if (moduleId === Module.DASHBOARD) return true;
+    // Dashboard only for Admin and Manager
+    if (moduleId === Module.DASHBOARD) {
+      return role === 'admin' || role === 'manager';
+    }
+    
+    // Admin has access to everything
+    if (role === 'admin') return true;
     
     const requiredPerms = MODULE_PERMISSIONS[moduleId];
     if (!requiredPerms || requiredPerms.length === 0) {
-      // If no permissions defined, allow based on role
-      const role = currentUser.role.toLowerCase();
+      // If no permissions defined, only manager+ can access
       if (role === 'manager') return true;
       return false;
     }

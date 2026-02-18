@@ -63,6 +63,17 @@ const App: React.FC = () => {
     checkCurrentSession();
   }, [currentUser]);
 
+  // Redirect non-admin/manager users away from Dashboard
+  useEffect(() => {
+    if (currentUser && activeModule === Module.DASHBOARD) {
+      const role = currentUser.role.toLowerCase();
+      if (role !== 'admin' && role !== 'manager') {
+        // Redirect to POS (first available module for most roles)
+        setActiveModule(Module.POS);
+      }
+    }
+  }, [currentUser, activeModule]);
+
   const handleOpenCashier = async (initialBalance: number) => {
     try {
       const result = await cashierService.openCashier(initialBalance);
