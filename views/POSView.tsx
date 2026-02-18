@@ -64,8 +64,8 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await posService.getProducts();
-        const uniqueCategories = ['Todos', ...new Set(data.map((p: any) => p.category?.name || 'Sem Categoria'))];
+        const data = await posService.getCategories();
+        const uniqueCategories = ['Todos', ...new Set(data.map((c: any) => c.name))];
         setCategories(uniqueCategories);
       } catch (error) {
         console.error("Error fetching categories", error);

@@ -1,7 +1,17 @@
 import axios from 'axios';
 
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Em produção usa proxy nginx (/api), em desenvolvimento localhost
+  return window.location.hostname === 'localhost' 
+    ? 'http://localhost:3333/api' 
+    : '/api';
+};
+
 const api = axios.create({
-  baseURL: 'http://localhost:3333/api',
+  baseURL: getApiUrl(),
 });
 
 api.interceptors.request.use((config) => {
