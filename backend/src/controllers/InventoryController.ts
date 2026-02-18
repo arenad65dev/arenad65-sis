@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { InventoryService } from '../services/InventoryService';
 import { prisma } from '../lib/prisma';
+import { StorageService } from '../lib/storage';
 import { z } from 'zod';
 
 const purchaseOrderSchema = z.object({
@@ -229,7 +230,6 @@ export class InventoryController {
         try {
             const { id } = request.params;
 
-            // Verificar se o produto existe
             const product = await prisma.product.findUnique({
                 where: { id }
             });
@@ -238,13 +238,11 @@ export class InventoryController {
                 return reply.status(404).send({ message: 'Produto não encontrado' });
             }
 
-            // Verificar se há movimentações de estoque para este produto
             const stockMovements = await prisma.stockMovement.findMany({
                 where: { productId: id }
             });
 
             if (stockMovements.length > 0) {
-                // Em vez de deletar, marcar como inativo
                 await prisma.product.update({
                     where: { id },
                     data: { isActive: false }
@@ -255,7 +253,6 @@ export class InventoryController {
                 });
             }
 
-            // Se não houver movimentações, pode deletar
             await prisma.product.delete({
                 where: { id }
             });
@@ -265,6 +262,47 @@ export class InventoryController {
             request.log.error(error);
             return reply.status(500).send({
                 message: 'Erro ao deletar produto',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    // Buscar categorias de produtos
+    static async getCategories(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const categories = await prisma.category.findMany({
+                where: { type: 'PRODUCT' },
+                orderBy: { name: 'asc' }
+            });
+            return reply.send(categories);
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Erro ao buscar categorias' });
+        }
+    }
+
+    // Upload de imagem
+    static async uploadImage(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const data = await request.file();
+            
+            if (!data) {
+                return reply.status(400).send({ message: 'Nenhum arquivo enviado' });
+            }
+
+            const buffer = await data.toBuffer();
+            
+            const result = await StorageService.uploadFile({
+                buffer,
+                mimetype: data.mimetype,
+                originalname: data.filename || 'image.jpg'
+            });
+
+            return reply.send({ url: result.url, key: result.key });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ 
+                message: 'Erro ao fazer upload da imagem',
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
         }

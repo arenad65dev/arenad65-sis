@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import websocket from '@fastify/websocket';
+import multipart from '@fastify/multipart';
 import dotenv from 'dotenv';
 
 
@@ -37,6 +38,12 @@ server.register(jwt, {
 });
 
 server.register(websocket);
+
+server.register(multipart, {
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB
+    }
+});
 
 // Register the authenticate function globally to make it available to all routes
 server.decorate('authenticate', authenticate);

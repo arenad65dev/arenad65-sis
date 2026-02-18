@@ -1,19 +1,25 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Product } from '../types';
+import { Category, inventoryService } from '../services/inventoryService';
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (product: Partial<Product>) => void;
   initialData?: Product | null;
+  categories?: Category[];
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState<Partial<Product>>({
+const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, initialData, categories: propCategories }) => {
+  const [categories, setCategories] = useState<Category[]>(propCategories || []);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [formData, setFormData] = useState<Partial<Product> & { category?: string | { id: string; name: string } }>({
     name: '',
-    category: 'Bebidas',
+    category: '',
     price: 0,
     purchasePrice: 0,
     margin: 0,
@@ -21,16 +27,41 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     minStock: 0,
     sku: '',
     image: '',
+    imageUrl: '',
     description: ''
   });
 
   useEffect(() => {
+    if (propCategories && propCategories.length > 0) {
+      setCategories(propCategories);
+    } else {
+      const fetchCategories = async () => {
+        try {
+          const cats = await inventoryService.getCategories();
+          setCategories(cats);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      };
+      fetchCategories();
+    }
+  }, [propCategories]);
+
+  useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      const categoryId = typeof initialData.category === 'string' 
+        ? initialData.category 
+        : initialData.category?.id || '';
+      
+      setFormData({
+        ...initialData,
+        category: categoryId,
+        imageUrl: initialData.imageUrl || initialData.image || ''
+      });
     } else {
       setFormData({
         name: '',
-        category: 'Bebidas',
+        category: categories[0]?.id || '',
         price: 0,
         purchasePrice: 0,
         margin: 0,
@@ -38,16 +69,25 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
         minStock: 10,
         sku: `SKU-${Math.floor(Math.random() * 10000)}`,
         image: '',
+        imageUrl: '',
         description: ''
       });
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, categories]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const categoryId = typeof formData.category === 'string' 
+      ? formData.category 
+      : (formData.category as { id: string; name: string })?.id || '';
+    
+    onSave({
+      ...formData,
+      categoryId,
+      imageUrl: formData.imageUrl || formData.image
+    });
     onClose();
   };
 
@@ -79,17 +119,34 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     setFormData({ ...formData, margin: value, price: parseFloat((Number(newPrice) || 0).toFixed(2)) });
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const result = await inventoryService.uploadImage(file);
+      setFormData({ ...formData, imageUrl: result.url, image: result.url });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Erro ao fazer upload da imagem');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const currentCategoryId = typeof formData.category === 'string' 
+    ? formData.category 
+    : (formData.category as { id: string; name: string })?.id || '';
+
   return createPortal(
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fadeIn" onClick={onClose}></div>
 
-      {/* Modal Card */}
       <form
         onSubmit={handleSubmit}
         className="relative bg-white dark:bg-surface-dark w-full max-w-4xl max-h-[90vh] rounded-[32px] md:rounded-[40px] shadow-2xl overflow-hidden animate-fadeIn flex flex-col md:flex-row border border-white/20"
       >
-        {/* Botão de Fechar */}
         <button
           type="button"
           onClick={onClose}
@@ -98,7 +155,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
           <span className="material-symbols-outlined">close</span>
         </button>
 
-        {/* Coluna Esquerda: Dados Gerais */}
         <div className="flex-1 p-4 md:p-8 lg:p-12 space-y-6 md:space-y-8 border-r border-slate-100 dark:border-slate-800 overflow-y-auto custom-scrollbar">
           <div className="flex items-center gap-4">
             <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -130,14 +186,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Categoria</label>
                 <div className="relative">
                   <select
-                    value={formData.category}
+                    value={currentCategoryId}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 text-sm font-medium dark:text-white appearance-none"
                   >
-                    <option>Bebidas</option>
-                    <option>Comidas</option>
-                    <option>Equipamentos</option>
-                    <option>Limpeza / Manut.</option>
+                    <option value="">Selecione...</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
                   </select>
                   <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
                 </div>
@@ -197,20 +253,49 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">URL da Imagem</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Imagem do Produto</label>
                 <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 text-sm font-medium dark:text-white"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex-1 px-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-medium dark:text-white hover:border-primary/50 transition-all flex items-center justify-center gap-2"
+                  >
+                    {uploading ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                        <span>Enviando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-lg">upload</span>
+                        <span>Upload</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {(formData.imageUrl || formData.image) && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img 
+                      src={formData.imageUrl || formData.image} 
+                      alt="Preview" 
+                      className="size-12 rounded-xl object-cover border border-slate-200"
+                    />
+                    <span className="text-[10px] text-green-600 font-bold">Imagem carregada</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Coluna Direita: Controle de Estoque */}
         <div className="w-full md:w-[380px] bg-slate-50/80 dark:bg-slate-900/40 p-6 md:p-12 flex flex-col gap-8 overflow-y-auto custom-scrollbar border-t md:border-t-0 border-slate-100 dark:border-slate-800">
           <div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1">Controle de Estoque</h3>

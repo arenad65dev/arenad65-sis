@@ -33,6 +33,13 @@ export interface Product {
   };
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  type?: string;
+  color?: string;
+}
+
 export interface StockMovement {
   id: string;
   productId: string;
@@ -138,5 +145,21 @@ export const inventoryService = {
   // Deletar produto
   async deleteProduct(id: string): Promise<void> {
     await api.delete(`/inventory/products/${id}`);
+  },
+
+  // Buscar categorias
+  async getCategories(): Promise<Category[]> {
+    const response = await api.get('/inventory/categories');
+    return response.data;
+  },
+
+  // Upload de imagem
+  async uploadImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/inventory/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
   }
 };

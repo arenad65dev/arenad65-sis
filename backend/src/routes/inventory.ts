@@ -32,4 +32,10 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
 
     // Deletar produto
     fastify.delete('/products/:id', InventoryController.deleteProduct);
+
+    // Buscar categorias
+    fastify.get('/categories', InventoryController.getCategories);
+
+    // Upload de imagem
+    fastify.post('/upload', InventoryController.uploadImage);
 }
