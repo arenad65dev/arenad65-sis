@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { userService, User, Permission, ActivityLog } from '../services/userService';
+import { getUserAvatar } from '../utils/avatar';
 
 interface Toast {
   id: number;
@@ -337,13 +338,7 @@ const UserManagementView: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-slate-100 overflow-hidden ring-2 ring-primary/10">
-                        {user.avatar ? (
-                          <img src={user.avatar} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-bold text-xs">
-                            {user.name.substring(0, 2).toUpperCase()}
-                          </div>
-                        )}
+                        <img src={getUserAvatar(user)} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-black text-slate-900 truncate">{user.name}</span>
@@ -422,13 +417,7 @@ const UserManagementView: React.FC = () => {
 
               <div className="flex flex-col items-center text-center gap-2 mt-8 lg:mt-0">
                 <div className="size-20 rounded-[24px] overflow-hidden border-4 border-white shadow-xl ring-2 ring-primary">
-                  {selectedUser.avatar ? (
-                    <img src={selectedUser.avatar} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-bold text-2xl">
-                      {selectedUser.name.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <img src={getUserAvatar(selectedUser)} className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h3 className="text-xl font-black tracking-tight">{selectedUser.name}</h3>
