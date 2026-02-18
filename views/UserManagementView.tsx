@@ -35,6 +35,22 @@ const MODULES = [
   },
 ];
 
+const ROLE_TRANSLATIONS: Record<string, string> = {
+  'ADMIN': 'Administrador',
+  'MANAGER': 'Gerente',
+  'STAFF': 'Funcionário',
+  'CASHIER': 'Caixa',
+  'WAITER': 'Garçom'
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  'ADMIN': 'bg-red-100 text-red-700',
+  'MANAGER': 'bg-purple-100 text-purple-700',
+  'STAFF': 'bg-blue-100 text-blue-700',
+  'CASHIER': 'bg-green-100 text-green-700',
+  'WAITER': 'bg-yellow-100 text-yellow-700'
+};
+
 const UserManagementView: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -331,7 +347,7 @@ const UserManagementView: React.FC = () => {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-black text-slate-900 truncate">{user.name}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{user.role} • {user.department || 'Sem dept'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{ROLE_TRANSLATIONS[user.role] || user.role} • {user.department || 'Sem dept'}</span>
                       </div>
                     </div>
                   </td>
@@ -564,11 +580,11 @@ const UserManagementView: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                 >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="MANAGER">MANAGER</option>
-                  <option value="STAFF">STAFF</option>
-                  <option value="CASHIER">CASHIER</option>
-                  <option value="WAITER">WAITER</option>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="MANAGER">Gerente</option>
+                  <option value="STAFF">Funcionário</option>
+                  <option value="CASHIER">Caixa</option>
+                  <option value="WAITER">Garçom</option>
                 </select>
               </div>
               <div>
