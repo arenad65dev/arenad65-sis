@@ -22,15 +22,15 @@ COPY services/ ./services/
 COPY views/ ./views/
 COPY public/ ./public/
 COPY vite-env.d.ts ./
+COPY .env.production ./
+
+# Instalar dependências (incluindo devDependencies)
+RUN npm install
 
 # Definir variável de ambiente para o build
 ENV VITE_API_URL=$VITE_API_URL
 
-# Instalar dependências
-RUN npm ci
-
-# Build com production mode
-ENV NODE_ENV=production
+# Build
 RUN npm run build
 
 # Nginx
