@@ -21,9 +21,9 @@ export interface User {
   name: string;
   email: string;
   role: string;
-  department: string;
-  status: 'active' | 'inactive';
-  avatar: string;
+  department?: string;
+  status?: 'active' | 'inactive';
+  avatar?: string;
   points?: number;
   lastVisit?: string;
   level?: 'Ouro' | 'Prata' | 'Bronze';
