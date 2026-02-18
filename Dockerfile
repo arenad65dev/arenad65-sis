@@ -20,6 +20,7 @@ COPY components/ ./components/
 COPY hooks/ ./hooks/
 COPY services/ ./services/
 COPY views/ ./views/
+COPY utils/ ./utils/
 COPY public/ ./public/
 COPY vite-env.d.ts ./
 COPY .env.production ./
