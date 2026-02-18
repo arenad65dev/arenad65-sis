@@ -74,17 +74,14 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCloseCashier = async () => {
+  const handleCloseCashier = async (finalBalance: number) => {
     if (!cashierSession) return;
     
     try {
-      // For now, we'll close without final balance
-      // In a real implementation, you might want to show a modal to input final balance
-      await cashierService.closeCashier(cashierSession.id, 0);
+      await cashierService.closeCashier(cashierSession.id, finalBalance);
       setCashierSession(null);
     } catch (error) {
       console.error('Error closing cashier:', error);
-      // Handle error
     }
   };
 

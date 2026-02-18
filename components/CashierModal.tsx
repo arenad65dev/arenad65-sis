@@ -9,7 +9,7 @@ interface CashierModalProps {
   isCashierOpen: boolean;
   session?: CashierSession;
   onConfirm: (initialBalance: number) => void;
-  onToggle: () => void;
+  onToggle: (finalBalance: number) => void;
   onRecordSkimming?: (amount: number, reason: string) => void;
 }
 
@@ -63,7 +63,7 @@ const CashierModal: React.FC<CashierModalProps> = ({
           setSkimmingReason('');
           setActiveTab('CLOSE');
         } else {
-          onToggle();
+          onToggle(closingBalanceInput);
         }
       }
       setIsProcessing(false);
