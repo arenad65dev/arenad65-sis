@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { User } from '../types';
 
-const API_URL = 'http://localhost:3333/api/clients';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.arenad65.cloud';
+const API_URL = `${API_BASE_URL}/api/clients`;
 
 export interface Client extends User {
     cpf?: string;
