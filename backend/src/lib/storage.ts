@@ -18,9 +18,9 @@ export class StorageService {
         buffer: Buffer;
         mimetype: string;
         originalname: string;
-    }): Promise<{ url: string; key: string }> {
+    }, folder: string = 'products'): Promise<{ url: string; key: string }> {
         const ext = file.originalname.split('.').pop() || 'jpg';
-        const key = `products/${uuidv4()}.${ext}`;
+        const key = `${folder}/${uuidv4()}.${ext}`;
 
         const command = new PutObjectCommand({
             Bucket: BUCKET_NAME,

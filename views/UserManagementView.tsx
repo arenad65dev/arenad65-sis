@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { userService, User, Permission, ActivityLog } from '../services/userService';
 import { getUserAvatar } from '../utils/avatar';
 
@@ -70,8 +70,12 @@ const UserManagementView: React.FC = () => {
     email: '',
     password: '',
     role: 'STAFF',
-    department: ''
+    department: '',
+    avatar: ''
   });
+
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [permissions, setPermissions] = useState<UserPermissions>({});
 
@@ -138,7 +142,7 @@ const UserManagementView: React.FC = () => {
       }
       setIsModalOpen(false);
       setEditingUser(null);
-      setFormData({ name: '', email: '', password: '', role: 'STAFF', department: '' });
+      setFormData({ name: '', email: '', password: '', role: 'STAFF', department: '', avatar: '' });
       loadUsers();
     } catch (error: any) {
       addToast(error.response?.data?.message || 'Erro ao salvar usuário', 'error');
@@ -152,9 +156,26 @@ const UserManagementView: React.FC = () => {
       email: user.email,
       password: '',
       role: user.role,
-      department: user.department || ''
+      department: user.department || '',
+      avatar: user.avatar || ''
     });
     setIsModalOpen(true);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const result = await userService.uploadAvatar(file);
+      setFormData({ ...formData, avatar: result.url });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      addToast('Erro ao fazer upload da foto', 'error');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleToggleStatus = async (user: User) => {
@@ -525,11 +546,43 @@ const UserManagementView: React.FC = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               {editingUser ? 'Editar Funcionário' : 'Novo Funcionário'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="size-24 rounded-full overflow-hidden bg-slate-100 border-2 border-slate-200">
+                    {formData.avatar ? (
+                      <img src={formData.avatar} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <span className="material-symbols-outlined text-4xl">person</span>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute -bottom-2 -right-2 size-8 rounded-full bg-primary text-slate-900 flex items-center justify-center shadow-lg hover:bg-primary-dark transition-colors"
+                  >
+                    {uploading ? (
+                      <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                    ) : (
+                      <span className="material-symbols-outlined text-sm">photo_camera</span>
+                    )}
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nome</label>
                 <input

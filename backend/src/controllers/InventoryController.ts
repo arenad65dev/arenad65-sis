@@ -296,7 +296,7 @@ export class InventoryController {
                 buffer,
                 mimetype: data.mimetype,
                 originalname: data.filename || 'image.jpg'
-            });
+            }, 'products');
 
             return reply.send({ url: result.url, key: result.key });
         } catch (error) {

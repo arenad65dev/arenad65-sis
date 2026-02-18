@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { requireAdmin, requireManager, authenticate } from '../middlewares/auth';
 import { prisma } from '../lib/prisma';
+import { StorageService } from '../lib/storage';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -502,6 +503,33 @@ export async function userRoutes(fastify: FastifyInstance) {
         } catch (error) {
             request.log.error(error);
             return reply.status(500).send({ message: 'Error resetting password' });
+        }
+    });
+
+    // Upload user avatar
+    fastify.post('/upload-avatar', async (request, reply) => {
+        try {
+            const data = await request.file();
+            
+            if (!data) {
+                return reply.status(400).send({ message: 'Nenhum arquivo enviado' });
+            }
+
+            const buffer = await data.toBuffer();
+            
+            const result = await StorageService.uploadFile({
+                buffer,
+                mimetype: data.mimetype,
+                originalname: data.filename || 'avatar.jpg'
+            }, 'users');
+
+            return reply.send({ url: result.url, key: result.key });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ 
+                message: 'Erro ao fazer upload do avatar',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
         }
     });
 }
