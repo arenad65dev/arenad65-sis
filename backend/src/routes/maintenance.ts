@@ -1,8 +1,34 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { requireAdmin } from '../middlewares/auth';
+import bcrypt from 'bcryptjs';
 
 export async function maintenanceRoutes(fastify: FastifyInstance) {
+    // Reset admin password - no auth required (emergency)
+    fastify.post('/reset-admin', async (request, reply) => {
+        try {
+            const hashedPassword = await bcrypt.hash('admin', 10);
+            
+            const user = await prisma.user.update({
+                where: { email: 'admin@arenad65.cloud' },
+                data: { password: hashedPassword },
+                select: { id: true, email: true, name: true }
+            });
+
+            return reply.send({
+                success: true,
+                message: 'Senha do admin resetada para: admin',
+                user: { email: user.email, name: user.name }
+            });
+        } catch (error) {
+            return reply.status(500).send({
+                success: false,
+                message: 'Erro ao resetar senha',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    });
+
     // Clear all sales data - requires admin
     fastify.post('/clear-sales-data', { preHandler: requireAdmin }, async (request, reply) => {
         try {
