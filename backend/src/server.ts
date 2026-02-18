@@ -28,6 +28,7 @@ import { inventoryRoutes } from './routes/inventory';
 import { cashierRoutes } from './routes/cashier';
 import { tablesRoutes } from './routes/tables';
 import { clientRoutes } from './routes/clients';
+import { userRoutes } from './routes/users';
 import { authenticate } from './middlewares/auth';
 
 server.register(jwt, {
@@ -46,6 +47,7 @@ server.register(inventoryRoutes, { prefix: '/api/inventory' });
 server.register(cashierRoutes, { prefix: '/api/cashier' });
 server.register(tablesRoutes, { prefix: '/api/tables' });
 server.register(clientRoutes, { prefix: '/api/clients' });
+server.register(userRoutes, { prefix: '/api/users' });
 
 // Health Check
 server.get('/health', async (request, reply) => {

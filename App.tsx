@@ -8,6 +8,7 @@ import DashboardView from './views/DashboardView';
 import POSView from './views/POSView';
 import InventoryView from './views/InventoryView';
 import LoginView from './views/LoginView';
+import UserManagementView from './views/UserManagementView';
 import { authService } from './services/authService';
 import { cashierService } from './services/cashierService';
 import CashierInfoModal from './components/CashierInfoModal';
@@ -131,7 +132,7 @@ const App: React.FC = () => {
                 {activeModule === Module.DASHBOARD && <DashboardView onNavigate={setActiveModule} />}
                 {activeModule === Module.POS && <POSView isCashierOpen={!!cashierSession} onOpenCashier={() => setIsCashierModalOpen(true)} />}
                 {activeModule === Module.INVENTORY && <InventoryView />}
-                {activeModule === Module.USERS && <div className="p-8"><h1>Gestão de Usuários</h1><p>Em desenvolvimento...</p></div>}
+                {activeModule === Module.USERS && <UserManagementView />}
                 {activeModule === Module.FINANCE && <div className="p-8"><h1>Financeiro</h1><p>Em desenvolvimento...</p></div>}
                 {activeModule === Module.MAINTENANCE && <div className="p-8"><h1>Manutenção</h1><p>Em desenvolvimento...</p></div>}
                 {activeModule === Module.CRM && <div className="p-8"><h1>CRM</h1><p>Em desenvolvimento...</p></div>}
