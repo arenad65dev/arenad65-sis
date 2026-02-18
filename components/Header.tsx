@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Module, User } from '../types';
+import { getUserAvatar } from '../utils/avatar';
 interface HeaderProps {
   activeModule: Module;
   setActiveModule: (m: Module) => void;
@@ -76,10 +77,13 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="relative" ref={profileRef}>
           <div className="flex items-center gap-1">
-            <div
-              className="size-8 rounded-xl bg-cover bg-center border border-primary/40 shadow-sm bg-slate-200"
-              style={{ backgroundImage: `url(${user?.avatar || 'https://placehold.co/100x100?text=USER'})` }}
-            />
+            {user && (
+              <img
+                src={getUserAvatar(user)}
+                alt={user.name}
+                className="size-8 rounded-xl object-cover border border-primary/40 shadow-sm"
+              />
+            )}
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
               className={`p-1 rounded-lg transition-all ${isProfileDropdownOpen ? 'bg-primary/5' : 'hover:bg-slate-100 dark:hover:bg-white/5'}`}
