@@ -1,6 +1,8 @@
 # Frontend Dockerfile (monorepo - raiz)
 FROM node:20-alpine AS builder
 
+ARG VITE_API_URL=https://api.arenad65.cloud
+
 WORKDIR /app
 
 # Copiar apenas arquivos necessários para build
@@ -20,7 +22,12 @@ COPY services/ ./services/
 COPY views/ ./views/
 COPY public/ ./public/
 COPY vite-env.d.ts ./
-COPY .env.production ./
+
+# Definir variável de ambiente para o build
+ENV VITE_API_URL=$VITE_API_URL
+
+# Instalar dependências
+RUN npm ci
 
 # Build com production mode
 ENV NODE_ENV=production
