@@ -43,16 +43,29 @@ export class CashierController {
     }
 
     // Close cashier session
-    static async closeCashier(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    static async closeCashier(request: FastifyRequest<{ Params: { id: string }, Body: { finalBalance: number } }>, reply: FastifyReply) {
         try {
             const { id } = request.params;
             const data = closeCashierSchema.parse(request.body);
+            // @ts-ignore - JWT user
+            const userId = request.user?.id;
+            // @ts-ignore - JWT user
+            const userRole = request.user?.role;
 
-            const session = await CashierService.closeCashier(id, data.finalBalance);
+            const session = await CashierService.getSessionSummary(id);
+            
+            // Only the user who opened or admin can close
+            if (session.user.id !== userId && userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+                return reply.status(403).send({
+                    message: `Apenas ${session.user.name} ou um gerente pode fechar este caixa`
+                });
+            }
+
+            const closedSession = await CashierService.closeCashier(id, data.finalBalance);
 
             return reply.send({
                 message: 'Caixa fechado com sucesso',
-                session
+                session: closedSession
             });
         } catch (error) {
             request.log.error(error);

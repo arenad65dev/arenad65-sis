@@ -129,11 +129,11 @@ export class CashierService {
         return { skimming, session: updatedSession };
     }
 
-    // Get current open session for user
+    // Get current open session for user (now returns ANY open session - shared cashier)
     static async getCurrentSession(userId: string) {
-        const session = await prisma.cashierSession.findFirst({
+        // First check if there's an open session (shared by all users)
+        const openSession = await prisma.cashierSession.findFirst({
             where: {
-                userId: userId,
                 status: CashierStatus.OPEN
             },
             include: {
@@ -141,7 +141,8 @@ export class CashierService {
                     select: {
                         id: true,
                         name: true,
-                        email: true
+                        email: true,
+                        role: true
                     }
                 },
                 skimmings: {
@@ -152,7 +153,14 @@ export class CashierService {
             }
         });
 
-        return session;
+        // If there's an open session, return it regardless of who opened it
+        // This allows all users to use the same cashier
+        if (openSession) {
+            return openSession;
+        }
+
+        // No open session - return null
+        return null;
     }
 
     // Get all sessions for a user
