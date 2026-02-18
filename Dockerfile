@@ -20,11 +20,10 @@ COPY services/ ./services/
 COPY views/ ./views/
 COPY public/ ./public/
 COPY vite-env.d.ts ./
+COPY .env.production ./
 
-# Instalar dependências
-RUN npm ci
-
-# Build
+# Build com production mode
+ENV NODE_ENV=production
 RUN npm run build
 
 # Nginx
