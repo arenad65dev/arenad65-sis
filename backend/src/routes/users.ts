@@ -81,11 +81,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     });
 
     // Create user (admin only)
-    fastify.post('/', {
-        schema: {
-            body: createUserSchema
-        }
-    }, async (request, reply) => {
+    fastify.post('/', async (request, reply) => {
         try {
             // @ts-ignore - JWT user
             const currentUserRole = request.user?.role;
