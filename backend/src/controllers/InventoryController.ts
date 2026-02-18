@@ -17,17 +17,17 @@ const productSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(1),
     description: z.string().optional(),
-    price: z.number().min(0),
-    costPrice: z.number().min(0).optional(),
-    purchasePrice: z.number().min(0).optional(),
-    stock: z.number().min(0).optional(),
-    minStock: z.number().min(0).optional(),
+    price: z.preprocess((v) => Number(v), z.number().min(0)),
+    costPrice: z.preprocess((v) => v == null ? undefined : Number(v), z.number().min(0).optional()),
+    purchasePrice: z.preprocess((v) => v == null ? undefined : Number(v), z.number().min(0).optional()),
+    stock: z.preprocess((v) => v == null ? undefined : Number(v), z.number().min(0).optional()),
+    minStock: z.preprocess((v) => v == null ? undefined : Number(v), z.number().min(0).optional()),
     unit: z.string().optional(),
     sku: z.string().optional(),
     imageUrl: z.string().optional(),
     categoryId: z.string().optional(),
     type: z.enum(['PRODUCT', 'SERVICE', 'RENTAL']).optional(),
-    isActive: z.boolean().optional()
+    isActive: z.preprocess((v) => v == null ? undefined : Boolean(v), z.boolean().optional())
 });
 
 const stockAdjustmentSchema = z.object({
