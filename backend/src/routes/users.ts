@@ -34,9 +34,7 @@ async function logActivity(prisma: any, userId: string, action: string, module: 
         data: {
             userId,
             action,
-            module,
-            details: description,
-            metadata
+            details: description || `${action} - ${module}`
         }
     });
 }
