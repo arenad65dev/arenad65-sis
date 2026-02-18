@@ -70,6 +70,7 @@ model User {
   isActive  Boolean  @default(true)
   avatar    String?
   department String?
+  lastLogin DateTime?
   preferences Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

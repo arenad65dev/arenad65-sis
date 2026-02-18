@@ -369,7 +369,17 @@ const UserManagementView: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-600">Sem registro</span>
+                      <span className="text-xs font-bold text-slate-600">
+                        {user.lastLogin 
+                          ? new Date(user.lastLogin).toLocaleString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : 'Nunca acessou'}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">

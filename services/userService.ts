@@ -18,6 +18,7 @@ export interface User {
   isActive: boolean;
   avatar?: string;
   department?: string;
+  lastLogin?: string;
   createdAt: string;
   updatedAt?: string;
   permissions?: Permission[];

@@ -187,6 +187,7 @@ export async function userRoutes(fastify: FastifyInstance) {
                     isActive: true,
                     avatar: true,
                     department: true,
+                    lastLogin: true,
                     createdAt: true,
                     updatedAt: true
                 },

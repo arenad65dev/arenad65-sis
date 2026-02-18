@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Module, User } from '../types';
 import { NAV_ITEMS } from '../constants';
+import { userService, Permission } from '../services/userService';
 
 interface SidebarProps {
   activeModule: Module;
@@ -11,28 +12,80 @@ interface SidebarProps {
   currentUser: User | null;
 }
 
+const MODULE_PERMISSIONS: Record<Module, { module: string; action: string }[]> = {
+  [Module.DASHBOARD]: [], // Dashboard is always accessible
+  [Module.POS]: [
+    { module: 'Bar / PDV', action: 'Realizar Vendas' },
+    { module: 'Bar / PDV', action: 'Fechamento de Caixa' },
+    { module: 'Bar / PDV', action: 'Gestão de Estoque' },
+    { module: 'Bar / PDV', action: 'Ajuste de Preços' },
+  ],
+  [Module.INVENTORY]: [
+    { module: 'Bar / PDV', action: 'Gestão de Estoque' },
+  ],
+  [Module.USERS]: [
+    { module: 'Usuários', action: 'Acesso Total' },
+    { module: 'Usuários', action: 'Criar Usuários' },
+    { module: 'Usuários', action: 'Editar Permissões' },
+  ],
+  [Module.FINANCE]: [
+    { module: 'Financeiro', action: 'Acesso Total' },
+    { module: 'Financeiro', action: 'Apenas Visualização' },
+    { module: 'Financeiro', action: 'Relatórios Fiscais' },
+  ],
+  [Module.MAINTENANCE]: [
+    { module: 'Instalações', action: 'Gerenciar Reservas' },
+    { module: 'Instalações', action: 'Visualizar Grade' },
+    { module: 'Instalações', action: 'Bloqueio de Quadras' },
+  ],
+  [Module.CRM]: [], // CRM needs its own permissions
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule, isOpen, toggle, currentUser }) => {
-  // RBAC Filter Logic
-  const filteredNavItems = NAV_ITEMS.filter(item => {
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+
+  useEffect(() => {
+    const loadPermissions = async () => {
+      if (currentUser) {
+        try {
+          const perms = await userService.getMyPermissions();
+          setPermissions(perms);
+        } catch (error) {
+          console.error('Error loading permissions:', error);
+        }
+      }
+    };
+    loadPermissions();
+  }, [currentUser]);
+
+  const hasPermission = (moduleId: Module): boolean => {
     if (!currentUser) return true;
-    const role = currentUser.role.toLowerCase();
-
-    if (role === 'admin') return true;
-
-    // Staff Restrictions
-    if (role === 'staff' || role === 'manager') {
-      const allowedModules = [Module.POS, Module.INVENTORY, Module.USERS, Module.FINANCE, Module.MAINTENANCE, Module.CRM];
-      return allowedModules.includes(item.id);
+    
+    // Admin has access to everything
+    if (currentUser.role === 'ADMIN') return true;
+    
+    // Dashboard is always accessible
+    if (moduleId === Module.DASHBOARD) return true;
+    
+    const requiredPerms = MODULE_PERMISSIONS[moduleId];
+    if (!requiredPerms || requiredPerms.length === 0) {
+      // If no permissions defined, allow based on role
+      const role = currentUser.role.toLowerCase();
+      if (role === 'manager') return true;
+      return false;
     }
+    
+    // Check if user has any of the required permissions
+    return requiredPerms.some(req => 
+      permissions.some(p => 
+        p.module === req.module && 
+        p.action === req.action && 
+        p.granted
+      )
+    );
+  };
 
-    // Cashier can only access POS and Inventory
-    if (role === 'cashier') {
-      const allowedModules = [Module.POS, Module.INVENTORY];
-      return allowedModules.includes(item.id);
-    }
-
-    return false;
-  });
+  const filteredNavItems = NAV_ITEMS.filter(item => hasPermission(item.id));
 
   return (
     <>

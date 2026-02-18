@@ -26,10 +26,20 @@ export class AuthController {
             return reply.code(401).send({ message: 'Invalid credentials' });
         }
 
+        if (!user.isActive) {
+            return reply.code(401).send({ message: 'User account is deactivated' });
+        }
+
         const isPasswordValid = await PasswordUtils.comparePassword(password, user.password);
         if (!isPasswordValid) {
             return reply.code(401).send({ message: 'Invalid credentials' });
         }
+
+        // Update last login
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() }
+        });
 
         const token = await reply.jwtSign({
             id: user.id,
