@@ -16,7 +16,7 @@ const MODULE_PERMISSIONS: Record<Module, { module: string; action: string }[]> =
   [Module.DASHBOARD]: [], // Dashboard is always accessible
   [Module.POS]: [
     { module: 'Bar / PDV', action: 'Realizar Vendas' },
-    { module: 'Bar / PDV', action: 'Fechamento de Caixa' },
+    { module: 'Bar / PDV', action: 'Abertura/Fechamento de Caixa' },
     { module: 'Bar / PDV', action: 'Gestão de Estoque' },
     { module: 'Bar / PDV', action: 'Ajuste de Preços' },
   ],

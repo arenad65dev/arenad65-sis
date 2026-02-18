@@ -22,7 +22,7 @@ const MODULES = [
   { 
     group: 'Bar / PDV', 
     icon: 'point_of_sale', 
-    items: ['Realizar Vendas', 'Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços'] 
+    items: ['Realizar Vendas', 'Abertura/Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços'] 
   },
   { 
     group: 'Instalações', 
