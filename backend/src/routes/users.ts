@@ -14,13 +14,13 @@ const createUserSchema = z.object({
 });
 
 const updateUserSchema = z.object({
-    name: z.string().min(1).optional(),
-    email: z.string().email().optional(),
-    password: z.string().min(6).optional(),
-    role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'CASHIER', 'WAITER']).optional(),
-    department: z.string().optional(),
-    avatar: z.string().optional(),
-    isActive: z.boolean().optional()
+    name: z.string().min(1).optional().nullable(),
+    email: z.string().email().optional().nullable(),
+    password: z.string().min(6).optional().nullable(),
+    role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'CASHIER', 'WAITER']).optional().nullable(),
+    department: z.string().optional().nullable(),
+    avatar: z.string().optional().nullable(),
+    isActive: z.boolean().optional().nullable()
 });
 
 const permissionSchema = z.object({
@@ -311,14 +311,22 @@ export async function userRoutes(fastify: FastifyInstance) {
     fastify.put('/:id', async (request, reply) => {
         try {
             const { id } = request.params as { id: string };
-            const data = updateUserSchema.parse(request.body);
+            const rawData = updateUserSchema.parse(request.body);
             // @ts-ignore
             const currentUserId = request.user?.id;
 
-            if (data.password) {
+            // Remove null values and convert to proper format for Prisma
+            const data: any = {};
+            if (rawData.name !== undefined && rawData.name !== null) data.name = rawData.name;
+            if (rawData.email !== undefined && rawData.email !== null) data.email = rawData.email;
+            if (rawData.password !== undefined && rawData.password !== null) {
                 const bcrypt = require('bcryptjs');
-                data.password = await bcrypt.hash(data.password, 10);
+                data.password = await bcrypt.hash(rawData.password, 10);
             }
+            if (rawData.role !== undefined && rawData.role !== null) data.role = rawData.role;
+            if (rawData.department !== undefined) data.department = rawData.department || null;
+            if (rawData.avatar !== undefined) data.avatar = rawData.avatar || null;
+            if (rawData.isActive !== undefined && rawData.isActive !== null) data.isActive = rawData.isActive;
 
             const user = await prisma.user.update({
                 where: { id },
