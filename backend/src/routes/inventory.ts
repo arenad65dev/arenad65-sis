@@ -9,8 +9,11 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     // Entrada de mercadoria (purchase order)
     fastify.post('/purchase-order', InventoryController.recordPurchaseOrder);
 
-    // Criar ou atualizar produto
+    // Criar produto
     fastify.post('/products', InventoryController.createOrUpdateProduct);
+
+    // Atualizar produto
+    fastify.put('/products/:id', InventoryController.updateProduct);
 
     // Ajuste manual de estoque
     fastify.post('/stock-adjustment', InventoryController.adjustStock);

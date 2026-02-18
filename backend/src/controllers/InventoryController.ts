@@ -202,6 +202,28 @@ export class InventoryController {
         }
     }
 
+    // Atualizar produto (PUT /products/:id)
+    static async updateProduct(request: FastifyRequest<{ Params: { id: string }, Body: any }>, reply: FastifyReply) {
+        try {
+            const { id } = request.params;
+            const body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;
+            const data = productSchema.parse({ ...body, id });
+
+            const product = await InventoryService.createOrUpdateProduct(data);
+
+            return reply.send({
+                message: 'Produto atualizado com sucesso',
+                product
+            });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(400).send({
+                message: 'Erro ao atualizar produto',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
     // Deletar produto
     static async deleteProduct(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
         try {
