@@ -24,11 +24,15 @@ export async function maintenanceRoutes(fastify: FastifyInstance) {
             const logsCount = await prisma.activityLog.deleteMany({});
             console.log(`   ✅ ${logsCount.count} logs deletados`);
 
-            // 5. Limpar CashierSessions
+            // 5. Limpar Skimming (sangrias) primeiro - tem FK para CashierSession
+            const skimmingCount = await prisma.skimming.deleteMany({});
+            console.log(`   ✅ ${skimmingCount.count} sangrias deletadas`);
+
+            // 6. Limpar CashierSessions
             const sessionsCount = await prisma.cashierSession.deleteMany({});
             console.log(`   ✅ ${sessionsCount.count} sessões deletadas`);
 
-            // 6. Limpar StockMovements
+            // 7. Limpar StockMovements
             const movementsCount = await prisma.stockMovement.deleteMany({});
             console.log(`   ✅ ${movementsCount.count} movimentações deletadas`);
 
@@ -48,6 +52,7 @@ export async function maintenanceRoutes(fastify: FastifyInstance) {
                     ordersDeleted: ordersCount.count,
                     transactionsDeleted: transactionsCount.count,
                     logsDeleted: logsCount.count,
+                    skimmingDeleted: skimmingCount.count,
                     sessionsDeleted: sessionsCount.count,
                     movementsDeleted: movementsCount.count,
                     productsReset: productsUpdated.count
