@@ -110,4 +110,8 @@ export const NAV_ITEMS = [
   { id: Module.DASHBOARD, icon: 'dashboard' },
   { id: Module.POS, icon: 'point_of_sale', label: 'Bar / PDV' },
   { id: Module.INVENTORY, icon: 'inventory_2', label: 'Estoque' },
+  { id: Module.USERS, icon: 'people', label: 'Usuários' },
+  { id: Module.FINANCE, icon: 'account_balance', label: 'Financeiro' },
+  { id: Module.MAINTENANCE, icon: 'build', label: 'Manutenção' },
+  { id: Module.CRM, icon: 'person_search', label: 'CRM' },
 ];

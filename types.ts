@@ -2,7 +2,11 @@
 export enum Module {
   DASHBOARD = 'Dashboard',
   POS = 'Bar / PDV',
-  INVENTORY = 'Estoque'
+  INVENTORY = 'Estoque',
+  USERS = 'Usuarios',
+  FINANCE = 'Financeiro',
+  MAINTENANCE = 'Manutencao',
+  CRM = 'CRM'
 }
 
 export interface UserPreferences {

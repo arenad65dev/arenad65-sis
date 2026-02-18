@@ -20,7 +20,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule, isOpen
     if (role === 'admin') return true;
 
     // Staff Restrictions
-    if (role === 'staff') {
+    if (role === 'staff' || role === 'manager') {
+      const allowedModules = [Module.POS, Module.INVENTORY, Module.USERS, Module.FINANCE, Module.MAINTENANCE, Module.CRM];
+      return allowedModules.includes(item.id);
+    }
+
+    // Cashier can only access POS and Inventory
+    if (role === 'cashier') {
       const allowedModules = [Module.POS, Module.INVENTORY];
       return allowedModules.includes(item.id);
     }
