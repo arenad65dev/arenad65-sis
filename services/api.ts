@@ -17,7 +17,8 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('arena_token');
+  // Backward compatibility: older builds stored JWT as "token"
+  const token = localStorage.getItem('arena_token') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -31,6 +32,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Token expired or invalid, clear local storage and redirect to login
       localStorage.removeItem('arena_token');
+      localStorage.removeItem('token');
       localStorage.removeItem('arena_user');
       window.location.href = '/';
     }
