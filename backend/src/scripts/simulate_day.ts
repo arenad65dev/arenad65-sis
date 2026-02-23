@@ -99,6 +99,7 @@ async function main() {
         console.log('\n8️⃣  Performing Skimming (Sangria)...');
         await CashierService.recordSkimming({
             sessionId: session.id,
+            userId: user.id,
             amount: 50.00,
             reason: 'Compra de Gelo'
         });
