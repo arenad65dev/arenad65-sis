@@ -284,6 +284,33 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     }
   };
 
+  const handleCancelTable = async (num: string) => {
+    const confirmed = window.confirm(`Tem certeza que deseja cancelar a mesa ${num}?`);
+    if (!confirmed) return;
+
+    try {
+      await tableService.cancelTable(num, 'Cancelada no PDV por lançamento incorreto');
+
+      setOpenTables(prev => {
+        const next = { ...prev };
+        delete next[num];
+        return next;
+      });
+
+      if (tableNumber === num) {
+        clearCart();
+        setSelectedUser(null);
+        setClientSearch('');
+        setTableNumber('');
+      }
+
+      addToast(`Mesa ${num} cancelada com sucesso!`, 'success');
+    } catch (error: any) {
+      console.error('Error cancelling table:', error);
+      addToast(error.response?.data?.message || 'Erro ao cancelar mesa', 'error');
+    }
+  };
+
   const handleFinishOrder = async (data: any) => {
     try {
       if (orderMode === 'TABLE' && tableNumber) {
@@ -524,6 +551,12 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                         Fechar / Dividir
                       </button>
                     </div>
+                    <button
+                      onClick={() => handleCancelTable(table.tableNumber)}
+                      className="h-11 mt-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Cancelar Mesa
+                    </button>
                   </div>
                 );
               })}
