@@ -279,14 +279,20 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     try {
       if (orderMode === 'TABLE' && tableNumber) {
         // Fechar mesa
+        const checkoutMethod = data.paymentMethod || data.method;
         const paymentData = {
-          paymentMethod: data.method === 'credit' ? 'CREDIT_CARD' :
-            data.method === 'debit' ? 'DEBIT_CARD' :
-              data.method === 'pix' ? 'PIX' : 'CASH',
+          paymentMethod: checkoutMethod === 'credit' || checkoutMethod === 'CREDIT_CARD' || checkoutMethod === 'CARTAO' || checkoutMethod === 'CARTÃO' ? 'CREDIT_CARD' :
+            checkoutMethod === 'debit' || checkoutMethod === 'DEBIT_CARD' ? 'DEBIT_CARD' :
+              checkoutMethod === 'pix' || checkoutMethod === 'PIX' ? 'PIX' : 'CASH',
           paidAmount: currentTableBalance
         };
 
         await tableService.closeTable(tableNumber, paymentData);
+        setOpenTables(prev => {
+          const next = { ...prev };
+          delete next[tableNumber];
+          return next;
+        });
         addToast(`Mesa ${tableNumber} fechada com sucesso!`);
       } else {
         // Venda direta
@@ -299,9 +305,10 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
         // Map frontend payment method to backend enum
         let method = 'CASH';
-        if (data.method === 'credit') method = 'CREDIT_CARD';
-        if (data.method === 'debit') method = 'DEBIT_CARD';
-        if (data.method === 'pix') method = 'PIX';
+        const checkoutMethod = data.paymentMethod || data.method;
+        if (checkoutMethod === 'credit' || checkoutMethod === 'CREDIT_CARD' || checkoutMethod === 'CARTAO' || checkoutMethod === 'CARTÃO') method = 'CREDIT_CARD';
+        if (checkoutMethod === 'debit' || checkoutMethod === 'DEBIT_CARD') method = 'DEBIT_CARD';
+        if (checkoutMethod === 'pix' || checkoutMethod === 'PIX') method = 'PIX';
 
         await posService.payOrder(createdOrder.id, method);
         addToast(`Venda #${createdOrder.number} finalizada com sucesso!`);
@@ -311,9 +318,9 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
       setSplitItems([]);
       handleResetPDV();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      addToast('Erro ao processar venda', 'error');
+      addToast(error.response?.data?.message || 'Erro ao processar venda', 'error');
     }
   };
 
