@@ -1,8 +1,7 @@
-import axios from 'axios';
+import api from './api';
 import { User } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.arenad65.cloud';
-const API_URL = `${API_BASE_URL}/api/clients`;
+const API_URL = '/clients';
 
 export interface Client extends User {
     cpf?: string;
@@ -10,22 +9,9 @@ export interface Client extends User {
 }
 
 export const clientService = {
-    // Configurar token JWT
-    getToken: () => localStorage.getItem('token'),
-
-    getConfig: () => {
-        const token = localStorage.getItem('token');
-        return {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        };
-    },
-
     list: async (search?: string): Promise<Client[]> => {
-        const config = clientService.getConfig();
         const params = search ? { search } : {};
-        const response = await axios.get(API_URL, { ...config, params });
+        const response = await api.get(API_URL, { params });
         // Mapear Client para User (interface usada no POS)
         return response.data.map((c: any) => ({
             id: c.id,
@@ -42,9 +28,8 @@ export const clientService = {
         }));
     },
 
-    create: async (data: { name: string; cpf?: string; phone?: string; email?: string }): Promise<Client> => {
-        const config = clientService.getConfig();
-        const response = await axios.post(API_URL, data, config);
+    create: async (data: { name: string; phone: string; cpf?: string; email?: string }): Promise<Client> => {
+        const response = await api.post(API_URL, data);
         const c = response.data;
         return {
             id: c.id,

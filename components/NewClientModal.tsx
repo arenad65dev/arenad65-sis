@@ -23,7 +23,12 @@ const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose, onSucc
         setError('');
 
         try {
-            const client = await clientService.create({ name, cpf, phone, email });
+            const client = await clientService.create({
+                name: name.trim(),
+                cpf: cpf.trim(),
+                phone: phone.trim(),
+                email: email.trim()
+            });
             onSuccess(client);
             onClose();
             // Reset form
@@ -81,9 +86,10 @@ const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose, onSucc
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Telefone</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Telefone *</label>
                             <input
-                                type="text"
+                                type="tel"
+                                required
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-900 dark:text-white font-medium"
