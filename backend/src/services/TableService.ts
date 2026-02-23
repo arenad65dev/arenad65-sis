@@ -31,7 +31,8 @@ export class TableService {
                 },
                 user: {
                     select: { id: true, name: true, email: true }
-                }
+                },
+                client: true
             }
         });
     }
@@ -107,7 +108,99 @@ export class TableService {
                 },
                 user: {
                     select: { id: true, name: true, email: true }
+                },
+                client: true
+            }
+        });
+    }
+
+    // Sincronizar itens da mesa com estado final (inclui remoções)
+    static async syncItemsToTable(tableNumber: string, items: { productId: string, quantity: number }[], clientId?: string) {
+        const table = await prisma.order.findFirst({
+            where: {
+                tableNumber,
+                status: OrderStatus.OPEN
+            },
+            include: { items: true }
+        });
+
+        if (!table) {
+            throw new Error(`Mesa ${tableNumber} não está aberta`);
+        }
+
+        const outOfStockItems: string[] = [];
+        let totalAmount = 0;
+        const incomingMap = new Map(items.map((item) => [item.productId, item.quantity]));
+        const existingMap = new Map(table.items.map((item) => [item.productId, item]));
+
+        for (const item of items) {
+            const product = await prisma.product.findUnique({ where: { id: item.productId } });
+            if (!product) throw new Error(`Produto ${item.productId} não encontrado`);
+
+            if (product.type === 'PRODUCT' && product.stock < item.quantity) {
+                outOfStockItems.push(`${product.name} (disponível: ${product.stock}, solicitado: ${item.quantity})`);
+            }
+
+            totalAmount += Number(product.price) * item.quantity;
+        }
+
+        if (outOfStockItems.length > 0) {
+            throw new Error(`Estoque insuficiente para: ${outOfStockItems.join(', ')}`);
+        }
+
+        await prisma.$transaction(async (tx) => {
+            for (const item of items) {
+                const product = await tx.product.findUnique({ where: { id: item.productId } });
+                if (!product) continue;
+
+                const existing = existingMap.get(item.productId);
+                if (existing) {
+                    await tx.orderItem.update({
+                        where: { id: existing.id },
+                        data: {
+                            quantity: item.quantity,
+                            price: Number(product.price)
+                        }
+                    });
+                } else {
+                    await tx.orderItem.create({
+                        data: {
+                            orderId: table.id,
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: Number(product.price)
+                        }
+                    });
                 }
+            }
+
+            for (const existing of table.items) {
+                if (!incomingMap.has(existing.productId)) {
+                    await tx.orderItem.delete({
+                        where: { id: existing.id }
+                    });
+                }
+            }
+
+            await tx.order.update({
+                where: { id: table.id },
+                data: {
+                    totalAmount,
+                    ...(clientId !== undefined ? { clientId: clientId || null } : {})
+                }
+            });
+        });
+
+        return prisma.order.findUnique({
+            where: { id: table.id },
+            include: {
+                items: {
+                    include: { product: true }
+                },
+                user: {
+                    select: { id: true, name: true, email: true }
+                },
+                client: true
             }
         });
     }
@@ -259,7 +352,8 @@ export class TableService {
                 },
                 user: {
                     select: { id: true, name: true, email: true }
-                }
+                },
+                client: true
             },
             orderBy: {
                 createdAt: 'asc'
@@ -280,7 +374,8 @@ export class TableService {
                 },
                 user: {
                     select: { id: true, name: true, email: true }
-                }
+                },
+                client: true
             }
         });
     }

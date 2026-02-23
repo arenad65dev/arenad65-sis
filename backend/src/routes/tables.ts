@@ -17,6 +17,8 @@ export async function tablesRoutes(fastify: FastifyInstance) {
 
     // Adicionar itens à mesa
     fastify.post('/:tableNumber/items', TableController.addItemsToTable);
+    // Sincronizar itens da mesa (inclui remoções)
+    fastify.put('/:tableNumber/items', TableController.syncItemsToTable);
 
     // Fechar mesa
     fastify.post('/:tableNumber/close', TableController.closeTable);

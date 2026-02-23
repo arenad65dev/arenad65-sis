@@ -161,9 +161,20 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
           setItems(cartItems);
 
-          const tableClient = table.clientId || '';
-          if (tableClient) {
-            // TODO: Fetch real user if needed
+          if (table.client) {
+            setSelectedUser({
+              id: table.client.id,
+              name: table.client.name,
+              email: table.client.email || '',
+              role: 'CLIENT',
+              department: 'External',
+              status: 'active',
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(table.client.name)}&background=random`,
+              points: table.client.points || 0,
+              level: 'Prata',
+              cpf: table.client.cpf,
+              phone: table.client.phone
+            });
             setClientSearch('');
           } else {
             setSelectedUser(null);
@@ -240,11 +251,6 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
       return;
     }
 
-    if (items.length === 0) {
-      addToast('Carrinho vazio! Adicione itens antes de lançar na mesa.', 'error');
-      return;
-    }
-
     try {
       // Converter itens do carrinho para o formato do backend
       const itemsForBackend = items.map(item => ({
@@ -252,11 +258,14 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
         quantity: item.qty
       }));
 
-      // Enviar itens para o backend
-      await tableService.addItemsToTable(tableNumber, itemsForBackend);
+      // Sincronizar itens no backend (inclui remoções)
+      const updatedTable = await tableService.syncItemsToTable(tableNumber, itemsForBackend, selectedUser?.id);
+      setOpenTables(prev => ({
+        ...prev,
+        [tableNumber]: updatedTable
+      }));
 
       addToast(`Itens lançados na Mesa ${tableNumber}!`);
-      handleResetPDV();
     } catch (error: any) {
       console.error('Error launching to table:', error);
 
@@ -722,7 +731,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
               {orderMode === 'TABLE' ? (
                 <>
                   <button
-                    disabled={items.length === 0 || !tableNumber}
+                    disabled={!tableNumber}
                     onClick={handleLaunchToTable}
                     className="flex-1 h-16 bg-blue-600 hover:bg-blue-700 disabled:opacity-30 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 text-[12px] uppercase tracking-widest"
                   >

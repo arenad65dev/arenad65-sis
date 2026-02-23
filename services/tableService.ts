@@ -11,6 +11,14 @@ export interface Table {
         name: string;
         email: string;
     };
+    client?: {
+        id: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        cpf?: string;
+        points?: number;
+    };
     clientId?: string;
     createdAt: string;
     closedAt?: string;
@@ -51,6 +59,12 @@ export const tableService = {
     // Adicionar itens à mesa
     addItemsToTable: async (tableNumber: string, items: { productId: string, quantity: number }[]) => {
         const response = await api.post(`/tables/${tableNumber}/items`, { items });
+        return response.data;
+    },
+
+    // Sincronizar itens da mesa (inclui remoções)
+    syncItemsToTable: async (tableNumber: string, items: { productId: string, quantity: number }[], clientId?: string) => {
+        const response = await api.put(`/tables/${tableNumber}/items`, { items, clientId });
         return response.data;
     },
 

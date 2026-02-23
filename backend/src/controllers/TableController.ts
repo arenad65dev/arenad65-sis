@@ -14,6 +14,14 @@ const addItemsSchema = z.object({
     })).min(1)
 });
 
+const syncItemsSchema = z.object({
+    items: z.array(z.object({
+        productId: z.string(),
+        quantity: z.number().int().min(1)
+    })),
+    clientId: z.string().optional()
+});
+
 const closeTableSchema = z.object({
     paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'TRANSFER', 'TAB']),
     paidAmount: z.number().optional()
@@ -98,6 +106,34 @@ export class TableController {
             }
 
             return reply.status(400).send({ message: 'Erro ao adicionar itens à mesa' });
+        }
+    }
+
+    static async syncItemsToTable(request: FastifyRequest<{ Params: { tableNumber: string } }>, reply: FastifyReply) {
+        try {
+            const { tableNumber } = request.params;
+            const data = syncItemsSchema.parse(request.body);
+
+            const table = await TableService.syncItemsToTable(tableNumber, data.items, data.clientId);
+            return reply.send(table);
+        } catch (error) {
+            request.log.error(error);
+
+            if (error instanceof Error && error.message.includes('não está aberta')) {
+                return reply.status(400).send({
+                    message: 'Mesa não está aberta',
+                    details: error.message
+                });
+            }
+
+            if (error instanceof Error && error.message.includes('Estoque insuficiente')) {
+                return reply.status(400).send({
+                    message: 'Estoque insuficiente',
+                    details: error.message
+                });
+            }
+
+            return reply.status(400).send({ message: 'Erro ao sincronizar itens da mesa' });
         }
     }
 
