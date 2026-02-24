@@ -1,22 +1,22 @@
 import { FastifyInstance } from 'fastify';
 import { InventoryController } from '../controllers/InventoryController';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, requireStaff } from '../middlewares/auth';
 
 export async function inventoryRoutes(fastify: FastifyInstance) {
     // Todas as rotas precisam de autenticação
     fastify.addHook('preHandler', authenticate);
 
     // Entrada de mercadoria (purchase order)
-    fastify.post('/purchase-order', InventoryController.recordPurchaseOrder);
+    fastify.post('/purchase-order', { preHandler: requireStaff }, InventoryController.recordPurchaseOrder);
 
     // Criar produto
-    fastify.post('/products', InventoryController.createOrUpdateProduct);
+    fastify.post('/products', { preHandler: requireStaff }, InventoryController.createOrUpdateProduct);
 
     // Atualizar produto
-    fastify.put('/products/:id', InventoryController.updateProduct);
+    fastify.put('/products/:id', { preHandler: requireStaff }, InventoryController.updateProduct);
 
     // Ajuste manual de estoque
-    fastify.post('/stock-adjustment', InventoryController.adjustStock);
+    fastify.post('/stock-adjustment', { preHandler: requireStaff }, InventoryController.adjustStock);
 
     // Buscar histórico de movimentações
     fastify.get('/movements', InventoryController.getStockMovements);
@@ -31,11 +31,11 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     fastify.get('/products', InventoryController.getProducts);
 
     // Deletar produto
-    fastify.delete('/products/:id', InventoryController.deleteProduct);
+    fastify.delete('/products/:id', { preHandler: requireStaff }, InventoryController.deleteProduct);
 
     // Buscar categorias
     fastify.get('/categories', InventoryController.getCategories);
 
     // Upload de imagem
-    fastify.post('/upload', InventoryController.uploadImage);
+    fastify.post('/upload', { preHandler: requireStaff }, InventoryController.uploadImage);
 }

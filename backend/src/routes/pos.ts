@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { POSController } from '../controllers/POSController';
-import { requireCashier } from '../middlewares/auth';
+import { requireCashier, requireStaff } from '../middlewares/auth';
 
 export async function posRoutes(fastify: FastifyInstance) {
     // Add authentication middleware to protect all POS routes
@@ -12,7 +12,7 @@ export async function posRoutes(fastify: FastifyInstance) {
     // Products
     fastify.get('/products', POSController.getProducts);
     fastify.get('/products/:id', POSController.getProduct);
-    fastify.put('/products/:id', POSController.updateProduct);
+    fastify.put('/products/:id', { preHandler: requireStaff }, POSController.updateProduct);
 
     // Orders
     fastify.get('/orders', POSController.getOrders);
