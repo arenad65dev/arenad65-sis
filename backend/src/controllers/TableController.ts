@@ -25,7 +25,7 @@ const syncItemsSchema = z.object({
 
 const closeTableSchema = z.object({
     paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'TRANSFER', 'TAB']),
-    paidAmount: z.number().optional()
+    paidAmount: z.preprocess((v) => v == null ? undefined : Number(v), z.number().positive().optional())
 });
 
 const transferTableSchema = z.object({

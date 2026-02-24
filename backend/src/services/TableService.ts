@@ -220,7 +220,8 @@ export class TableService {
             },
             include: {
                 items: { include: { product: true } },
-                user: true
+                user: true,
+                transactions: true
             }
         });
 
@@ -237,20 +238,17 @@ export class TableService {
             if (session) cashierSessionId = session.id;
         }
 
-        return prisma.$transaction(async (tx) => {
-            // Atualizar status do pedido
-            const updatedOrder = await tx.order.update({
-                where: { id: table.id },
-                data: {
-                    status: OrderStatus.PAID,
-                    closedAt: new Date(),
-                    clientId: paymentData?.clientId
-                }
-            });
+        const alreadyPaid = table.transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const totalAmount = Number(table.totalAmount);
+        const remainingAmount = Math.max(totalAmount - alreadyPaid, 0);
+        if (remainingAmount <= 0) throw new Error(`Mesa ${tableNumber} já está quitada`);
 
-            // Se houver dados de pagamento, criar transação
+        return prisma.$transaction(async (tx) => {
             if (paymentData) {
-                const amount = paymentData.paidAmount || Number(table.totalAmount);
+                const amount = paymentData.paidAmount ?? remainingAmount;
+                if (amount <= 0) throw new Error('Valor pago deve ser maior que zero');
+                if (amount > remainingAmount) throw new Error('Valor pago não pode ser maior que o saldo pendente');
+
                 await tx.transaction.create({
                     data: {
                         type: 'INCOME',
@@ -270,35 +268,69 @@ export class TableService {
                     });
                 }
 
-                // Dar baixa no estoque
-                for (const item of table.items) {
-                    if (item.product.type === 'PRODUCT') {
-                        // Atualizar estoque
-                        await tx.product.update({
-                            where: { id: item.productId },
-                            data: {
-                                stock: {
-                                    decrement: item.quantity
+                // Dar baixa no estoque só na primeira cobrança
+                if (alreadyPaid === 0) {
+                    for (const item of table.items) {
+                        if (item.product.type === 'PRODUCT') {
+                            await tx.product.update({
+                                where: { id: item.productId },
+                                data: {
+                                    stock: {
+                                        decrement: item.quantity
+                                    }
                                 }
-                            }
-                        });
+                            });
 
-                        // Registrar movimentação
-                        await tx.stockMovement.create({
-                            data: {
-                                type: 'OUT',
-                                productId: item.productId,
-                                quantity: item.quantity,
-                                unitCost: Number(item.product.costPrice || 0),
-                                reason: `Venda - Mesa ${tableNumber}`,
-                                reference: table.id
-                            }
-                        });
+                            await tx.stockMovement.create({
+                                data: {
+                                    type: 'OUT',
+                                    productId: item.productId,
+                                    quantity: -item.quantity,
+                                    unitCost: Number(item.product.costPrice || 0),
+                                    reason: `Venda - Mesa ${tableNumber}`,
+                                    reference: table.id
+                                }
+                            });
+                        }
                     }
                 }
+
+                const isFinalPayment = amount === remainingAmount;
+                const updatedOrder = await tx.order.update({
+                    where: { id: table.id },
+                    data: {
+                        ...(isFinalPayment ? { status: OrderStatus.PAID, closedAt: new Date() } : {}),
+                        clientId: paymentData.clientId
+                    },
+                    include: {
+                        items: { include: { product: true } },
+                        user: {
+                            select: { id: true, name: true, email: true }
+                        },
+                        client: true,
+                        transactions: true
+                    }
+                });
+
+                return {
+                    order: updatedOrder,
+                    paidAmount: amount,
+                    remainingAmount: Number((remainingAmount - amount).toFixed(2)),
+                    isPaid: isFinalPayment
+                };
             }
 
-            return updatedOrder;
+            return tx.order.findUnique({
+                where: { id: table.id },
+                include: {
+                    items: { include: { product: true } },
+                    user: {
+                        select: { id: true, name: true, email: true }
+                    },
+                    client: true,
+                    transactions: true
+                }
+            });
         });
     }
 
@@ -359,7 +391,8 @@ export class TableService {
                 user: {
                     select: { id: true, name: true, email: true }
                 },
-                client: true
+                client: true,
+                transactions: true
             },
             orderBy: {
                 createdAt: 'asc'
@@ -381,7 +414,8 @@ export class TableService {
                 user: {
                     select: { id: true, name: true, email: true }
                 },
-                client: true
+                client: true,
+                transactions: true
             }
         });
     }

@@ -63,13 +63,26 @@ export class POSService {
         });
     }
 
-    static async payOrder(orderId: string, paymentMethod: PaymentMethod, userId?: string) {
+    static async payOrder(orderId: string, paymentMethod: PaymentMethod, userId?: string, paidAmount?: number) {
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { items: { include: { product: true } } }
+            include: {
+                items: { include: { product: true } },
+                transactions: true
+            }
         });
         if (!order) throw new Error('Order not found');
         if (order.status === OrderStatus.PAID) throw new Error('Order already paid');
+
+        const alreadyPaid = order.transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const orderTotal = Number(order.totalAmount);
+        const remainingAmount = Math.max(orderTotal - alreadyPaid, 0);
+        if (remainingAmount <= 0) throw new Error('Order already settled');
+
+        const amountToCharge = paidAmount ?? remainingAmount;
+        if (amountToCharge <= 0) throw new Error('Paid amount must be greater than zero');
+        if (amountToCharge > remainingAmount) throw new Error('Paid amount cannot exceed remaining balance');
+        const isFinalPayment = amountToCharge === remainingAmount;
 
         // Find open cashier session if userId provided
         let cashierSessionId: string | undefined;
@@ -81,20 +94,11 @@ export class POSService {
         }
 
         return prisma.$transaction(async (tx) => {
-            // 1. Update Order Status
-            const updatedOrder = await tx.order.update({
-                where: { id: orderId },
-                data: {
-                    status: OrderStatus.PAID,
-                    closedAt: new Date()
-                }
-            });
-
-            // 2. Create Financial Transaction
+            // 1. Create Financial Transaction
             await tx.transaction.create({
                 data: {
                     type: 'INCOME',
-                    amount: order.totalAmount,
+                    amount: amountToCharge,
                     description: `Order #${order.number}`,
                     orderId: order.id,
                     paymentMethod: paymentMethod,
@@ -106,39 +110,51 @@ export class POSService {
             if (cashierSessionId) {
                 await tx.cashierSession.update({
                     where: { id: cashierSessionId },
-                    data: { totalSales: { increment: order.totalAmount } }
+                    data: { totalSales: { increment: amountToCharge } }
                 });
             }
 
-            // 3. Decrement Inventory for products
-            for (const item of order.items) {
-                // Only decrement stock for products, not services or rentals
-                if (item.product.type === 'PRODUCT') {
-                    const product = await tx.product.findUnique({
-                        where: { id: item.productId }
-                    });
+            // 3. Decrement stock only once (on first payment)
+            if (alreadyPaid === 0) {
+                for (const item of order.items) {
+                    if (item.product.type === 'PRODUCT') {
+                        const product = await tx.product.findUnique({
+                            where: { id: item.productId }
+                        });
 
-                    if (!product) {
-                        throw new Error(`Product ${item.productId} not found`);
+                        if (!product) {
+                            throw new Error(`Product ${item.productId} not found`);
+                        }
+
+                        if (product.stock < item.quantity) {
+                            throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+                        }
+
+                        await InventoryService.recordStockOut({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            reason: `Venda - Pedido #${order.number}`,
+                            reference: order.id,
+                            userId: order.userId || undefined
+                        });
                     }
-
-                    // Double-check stock before decrementing
-                    if (product.stock < item.quantity) {
-                        throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
-                    }
-
-                    // Decrement stock and record movement
-                    await InventoryService.recordStockOut({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        reason: `Venda - Pedido #${order.number}`,
-                        reference: order.id,
-                        userId: order.userId || undefined
-                    });
                 }
             }
 
-            return updatedOrder;
+            // 4. Close order only when fully paid
+            const updatedOrder = await tx.order.update({
+                where: { id: orderId },
+                data: {
+                    ...(isFinalPayment ? { status: OrderStatus.PAID, closedAt: new Date() } : {})
+                }
+            });
+
+            return {
+                order: updatedOrder,
+                paidAmount: amountToCharge,
+                remainingAmount: Number((remainingAmount - amountToCharge).toFixed(2)),
+                isPaid: isFinalPayment
+            };
         });
     }
 }

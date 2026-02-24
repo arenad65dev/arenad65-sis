@@ -49,8 +49,8 @@ export const posService = {
         return response.data;
     },
 
-    payOrder: async (orderId: string, paymentMethod: string) => {
-        const response = await api.post(`/pos/orders/${orderId}/pay`, { paymentMethod });
+    payOrder: async (orderId: string, paymentMethod: string, paidAmount?: number) => {
+        const response = await api.post(`/pos/orders/${orderId}/pay`, { paymentMethod, paidAmount });
         return response.data;
     },
 

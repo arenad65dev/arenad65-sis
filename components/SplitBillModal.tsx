@@ -56,7 +56,10 @@ const SplitBillModal: React.FC<SplitBillModalProps> = ({ isOpen, onClose, tableD
             return (
               <div key={item.product.id} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${currentSelected > 0 ? 'bg-primary/5 border-primary/30' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent'}`}>
                 <div className="size-12 rounded-xl bg-white dark:bg-slate-800 overflow-hidden shrink-0">
-                  <img src={item.product.image} className="w-full h-full object-cover" />
+                  <img
+                    src={item.product.imageUrl || item.product.image || 'https://placehold.co/400x400?text=No+Image'}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-black dark:text-white truncate uppercase tracking-tight leading-none mb-1">{item.product.name}</p>

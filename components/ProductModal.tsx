@@ -52,10 +52,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
       const categoryId = typeof initialData.category === 'string' 
         ? initialData.category 
         : initialData.category?.id || '';
+      const baseCost = Number(initialData.purchasePrice ?? initialData.costPrice) || 0;
+      const salePrice = Number(initialData.price) || 0;
+      const computedMargin = baseCost > 0 ? ((salePrice - baseCost) / baseCost) * 100 : 0;
       
       setFormData({
         ...initialData,
         category: categoryId,
+        purchasePrice: baseCost,
+        costPrice: baseCost,
+        margin: parseFloat((Number(computedMargin) || 0).toFixed(2)),
         imageUrl: initialData.imageUrl || initialData.image || ''
       });
     } else {
@@ -82,10 +88,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     const categoryId = typeof formData.category === 'string' 
       ? formData.category 
       : (formData.category as { id: string; name: string })?.id || '';
+    const normalizedPurchasePrice = Number(formData.purchasePrice || 0);
     
     onSave({
       ...formData,
       categoryId,
+      purchasePrice: normalizedPurchasePrice,
+      costPrice: normalizedPurchasePrice,
       imageUrl: formData.imageUrl || formData.image
     });
     onClose();
@@ -110,7 +119,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSave, in
     if (value > 0) {
       newMargin = ((price - value) / value) * 100;
     }
-    setFormData({ ...formData, purchasePrice: value, margin: parseFloat((Number(newMargin) || 0).toFixed(2)) });
+    setFormData({ ...formData, purchasePrice: value, costPrice: value, margin: parseFloat((Number(newMargin) || 0).toFixed(2)) });
   };
 
   const handleMarginChange = (value: number) => {

@@ -44,6 +44,8 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [splitItems, setSplitItems] = useState<{ product: any, qty: number }[]>([]);
   const [directPaidAmount, setDirectPaidAmount] = useState(0);
+  const [directOrderId, setDirectOrderId] = useState<string | null>(null);
+  const [directOrderNumber, setDirectOrderNumber] = useState<number | null>(null);
 
   const prevTableRef = useRef<string>('');
   const getOwnerNameFromNotes = (notes?: string) => {
@@ -141,6 +143,8 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     setTableNumber('');
     setSplitItems([]);
     setDirectPaidAmount(0);
+    setDirectOrderId(null);
+    setDirectOrderNumber(null);
     prevTableRef.current = '';
   };
 
@@ -339,6 +343,12 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
   const handleFinishOrder = async (data: any) => {
     try {
+      const amountToPay = Number(data?.amountToPay) || 0;
+      if (amountToPay <= 0) {
+        addToast('Informe um valor de pagamento válido', 'error');
+        return;
+      }
+
       if (orderMode === 'TABLE' && tableNumber) {
         // Fechar mesa
         const checkoutMethod = data.paymentMethod || data.method;
@@ -346,24 +356,42 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
           paymentMethod: checkoutMethod === 'credit' || checkoutMethod === 'CREDIT_CARD' || checkoutMethod === 'CARTAO' || checkoutMethod === 'CARTÃO' ? 'CREDIT_CARD' :
             checkoutMethod === 'debit' || checkoutMethod === 'DEBIT_CARD' ? 'DEBIT_CARD' :
               checkoutMethod === 'pix' || checkoutMethod === 'PIX' ? 'PIX' : 'CASH',
-          paidAmount: currentTableBalance
+          paidAmount: amountToPay
         };
 
-        await tableService.closeTable(tableNumber, paymentData);
-        setOpenTables(prev => {
-          const next = { ...prev };
-          delete next[tableNumber];
-          return next;
-        });
-        addToast(`Mesa ${tableNumber} fechada com sucesso!`);
+        const result = await tableService.closeTable(tableNumber, paymentData);
+        if (result?.isPaid) {
+          setOpenTables(prev => {
+            const next = { ...prev };
+            delete next[tableNumber];
+            return next;
+          });
+          addToast(`Mesa ${tableNumber} fechada com sucesso!`);
+          setIsCheckoutOpen(false);
+          setSplitItems([]);
+          handleResetPDV();
+          return;
+        }
+
+        const refreshedTable = await tableService.getTable(tableNumber);
+        setOpenTables(prev => ({ ...prev, [tableNumber]: refreshedTable }));
+        await loadTable(tableNumber);
+        addToast(`Pagamento parcial registrado. Saldo restante: R$ ${(Number(result?.remainingAmount) || 0).toFixed(2)}`, 'info');
       } else {
         // Venda direta
-        const orderData = {
-          items: items.map(i => ({ productId: i.product.id, quantity: i.qty }))
-          // userId: selectedUser?.id // If you have user selection logic
-        };
-
-        const createdOrder = await posService.createOrder(orderData);
+        let orderId = directOrderId;
+        let orderNumber = directOrderNumber;
+        if (!orderId) {
+          const orderData = {
+            items: items.map(i => ({ productId: i.product.id, quantity: i.qty }))
+            // userId: selectedUser?.id // If you have user selection logic
+          };
+          const createdOrder = await posService.createOrder(orderData);
+          orderId = createdOrder.id;
+          orderNumber = createdOrder.number;
+          setDirectOrderId(orderId);
+          setDirectOrderNumber(orderNumber);
+        }
 
         // Map frontend payment method to backend enum
         let method = 'CASH';
@@ -372,13 +400,22 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
         if (checkoutMethod === 'debit' || checkoutMethod === 'DEBIT_CARD') method = 'DEBIT_CARD';
         if (checkoutMethod === 'pix' || checkoutMethod === 'PIX') method = 'PIX';
 
-        await posService.payOrder(createdOrder.id, method);
-        addToast(`Venda #${createdOrder.number} finalizada com sucesso!`);
+        const result = await posService.payOrder(orderId, method, amountToPay);
+        setDirectPaidAmount(prev => Number((prev + amountToPay).toFixed(2)));
+
+        if (result?.isPaid) {
+          addToast(`Venda #${orderNumber || ''} finalizada com sucesso!`);
+          setIsCheckoutOpen(false);
+          setSplitItems([]);
+          handleResetPDV();
+          return;
+        }
+
+        addToast(`Pagamento parcial registrado na venda #${orderNumber || ''}. Restante: R$ ${(Number(result?.remainingAmount) || 0).toFixed(2)}`, 'info');
       }
 
       setIsCheckoutOpen(false);
       setSplitItems([]);
-      handleResetPDV();
 
     } catch (error: any) {
       console.error(error);
@@ -417,11 +454,15 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
   }, []);
 
   const currentTableBalance = useMemo(() => {
+    const getPaidForTable = (table?: Table) =>
+      (table?.transactions || []).reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
+
     if (splitItems.length > 0) {
       return splitItems.reduce((acc, i) => acc + (i.product.price * i.qty), 0);
     }
     if (orderMode === 'TABLE' && tableNumber && openTables[tableNumber]) {
-      return Number(openTables[tableNumber].totalAmount) - 0; // No backend, tables don't have paidAmount
+      const table = openTables[tableNumber];
+      return Math.max(Number(table.totalAmount) - getPaidForTable(table), 0);
     }
     return total - directPaidAmount;
   }, [tableNumber, openTables, total, orderMode, splitItems, directPaidAmount]);

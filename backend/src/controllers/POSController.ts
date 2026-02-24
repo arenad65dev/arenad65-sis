@@ -11,7 +11,8 @@ const createOrderSchema = z.object({
 });
 
 const payOrderSchema = z.object({
-    paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'TRANSFER', 'TAB'])
+    paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'TRANSFER', 'TAB']),
+    paidAmount: z.preprocess((v) => v == null ? undefined : Number(v), z.number().positive().optional())
 });
 
 const updateProductSchema = z.object({
@@ -264,11 +265,11 @@ export class POSController {
     static async payOrder(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
         try {
             const { id } = request.params;
-            const { paymentMethod } = payOrderSchema.parse(request.body);
+            const { paymentMethod, paidAmount } = payOrderSchema.parse(request.body);
             // @ts-ignore - JWT user
             const userId = request.user?.id;
 
-            const result = await POSService.payOrder(id, paymentMethod, userId);
+            const result = await POSService.payOrder(id, paymentMethod, userId, paidAmount);
             return reply.send(result);
         } catch (error) {
             request.log.error(error);

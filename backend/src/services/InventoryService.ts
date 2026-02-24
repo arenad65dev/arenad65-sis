@@ -233,6 +233,8 @@ export class InventoryService {
         isActive?: boolean;
     }) {
         const cleanSku = data.sku?.trim() || null;
+        const normalizedPurchasePrice = data.purchasePrice ?? data.costPrice;
+        const normalizedCostPrice = data.costPrice ?? data.purchasePrice ?? 0;
 
         if (data.id) {
             return prisma.product.update({
@@ -241,8 +243,8 @@ export class InventoryService {
                     name: data.name,
                     description: data.description,
                     price: data.price,
-                    costPrice: data.costPrice,
-                    purchasePrice: data.purchasePrice,
+                    costPrice: normalizedCostPrice,
+                    purchasePrice: normalizedPurchasePrice,
                     stock: data.stock,
                     minStock: data.minStock,
                     unit: data.unit,
@@ -260,8 +262,8 @@ export class InventoryService {
                     name: data.name,
                     description: data.description,
                     price: data.price,
-                    costPrice: data.costPrice || 0,
-                    purchasePrice: data.purchasePrice,
+                    costPrice: normalizedCostPrice,
+                    purchasePrice: normalizedPurchasePrice,
                     stock: data.stock || 0,
                     minStock: data.minStock || 5,
                     unit: data.unit || 'UN',

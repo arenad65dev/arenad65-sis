@@ -79,7 +79,10 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
             {filteredProducts.map(product => (
               <div key={product.id} className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all">
                 <div className="size-12 rounded-xl overflow-hidden bg-white shrink-0">
-                  <img src={product.image} className="w-full h-full object-cover" />
+                  <img
+                    src={product.imageUrl || product.image || 'https://placehold.co/400x400?text=No+Image'}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-black dark:text-white truncate uppercase tracking-tight">{product.name}</p>

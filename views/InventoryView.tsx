@@ -86,19 +86,20 @@ const InventoryView: React.FC = () => {
 
   const handleSaveProduct = async (data: Partial<Product>) => {
     try {
+      const normalizedPurchasePrice = Number(data.purchasePrice ?? data.costPrice ?? 0);
       const productData = {
         id: editingProduct?.id,
         name: data.name || '',
         description: data.description,
         price: data.price || 0,
-        costPrice: data.costPrice,
-        purchasePrice: data.purchasePrice,
+        costPrice: normalizedPurchasePrice,
+        purchasePrice: normalizedPurchasePrice,
         stock: data.stock || 0,
         minStock: data.minStock || 0,
         unit: data.unit || 'UN',
         sku: data.sku || '',
         imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=2070&auto=format&fit=crop',
-        categoryId: data.category?.id,
+        categoryId: data.categoryId || data.category?.id,
         type: 'PRODUCT' as 'PRODUCT' | 'SERVICE' | 'RENTAL',
         isActive: true
       };

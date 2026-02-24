@@ -83,7 +83,8 @@ async function main() {
             paidAmount: Number(tableToClose.totalAmount),
             clientId: client.id // Link client!
         }, user.id);
-        console.log(`✅ Table 15 Closed. Paid: R$ ${closedTable.totalAmount} by ${clientName}`);
+        const closedTotal = (closedTable as any)?.order?.totalAmount ?? (closedTable as any)?.totalAmount ?? 0;
+        console.log(`✅ Table 15 Closed. Paid: R$ ${closedTotal} by ${clientName}`);
 
         // 7. Direct Sale (Counter)
         console.log('\n7️⃣  Making Direct Sale (Balcão)...');

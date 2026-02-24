@@ -23,6 +23,11 @@ export interface Table {
     notes?: string;
     createdAt: string;
     closedAt?: string;
+    transactions?: Array<{
+        id: string;
+        amount: number;
+        paymentMethod?: string;
+    }>;
 }
 
 export interface TableItem {
