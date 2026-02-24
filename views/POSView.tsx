@@ -46,6 +46,17 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
   const [directPaidAmount, setDirectPaidAmount] = useState(0);
 
   const prevTableRef = useRef<string>('');
+  const getOwnerNameFromNotes = (notes?: string) => {
+    if (!notes) return '';
+    if (!notes.startsWith('OWNER:')) return '';
+    return notes.slice(6).trim();
+  };
+
+  const getTableOwnerName = (table?: Table) => {
+    if (!table) return '';
+    if (table.client?.name) return table.client.name;
+    return getOwnerNameFromNotes(table.notes);
+  };
 
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now();
@@ -161,6 +172,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
           setItems(cartItems);
 
+          const ownerNameFromNotes = getOwnerNameFromNotes(table.notes);
           if (table.client) {
             setSelectedUser({
               id: table.client.id,
@@ -176,6 +188,9 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
               phone: table.client.phone
             });
             setClientSearch('');
+          } else if (ownerNameFromNotes) {
+            setSelectedUser(null);
+            setClientSearch(ownerNameFromNotes);
           } else {
             setSelectedUser(null);
             setClientSearch('');
@@ -251,6 +266,12 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
       return;
     }
 
+    const ownerName = selectedUser?.name || clientSearch.trim();
+    if (!ownerName) {
+      addToast('Informe o nome do responsável pela mesa no campo de cliente.', 'error');
+      return;
+    }
+
     try {
       // Converter itens do carrinho para o formato do backend
       const itemsForBackend = items.map(item => ({
@@ -259,7 +280,12 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
       }));
 
       // Sincronizar itens no backend (inclui remoções)
-      const updatedTable = await tableService.syncItemsToTable(tableNumber, itemsForBackend, selectedUser?.id);
+      const updatedTable = await tableService.syncItemsToTable(
+        tableNumber,
+        itemsForBackend,
+        selectedUser?.id,
+        ownerName
+      );
       setOpenTables(prev => ({
         ...prev,
         [tableNumber]: updatedTable
@@ -521,19 +547,14 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
 
                     <div className="flex-1 flex flex-col gap-3">
                       <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        {table.user ? (
-                          <>
-                            <div className="min-w-0">
-                              <p className="text-[10px] font-black uppercase dark:text-white truncate">{table.user.name}</p>
-                              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Desde {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <span className="material-symbols-outlined text-lg">person_off</span>
-                            <span className="text-[9px] font-black uppercase">Consumidor Avulso</span>
-                          </div>
-                        )}
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase dark:text-white truncate">
+                            {getTableOwnerName(table) || 'SEM RESPONSAVEL'}
+                          </p>
+                          <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+                            Desde {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -638,10 +659,9 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1 text-center">Mesa</label>
                     <input
                       type="text"
-                      placeholder="Nº"
+                      placeholder="Selecione"
                       value={tableNumber}
-                      onChange={(e) => setTableNumber(e.target.value.toUpperCase())}
-                      onBlur={() => loadTable(tableNumber)}
+                      readOnly
                       className="w-full px-3 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[14px] font-black uppercase outline-none focus:ring-4 focus:ring-primary/10 dark:text-white text-center transition-all"
                     />
                   </div>
@@ -664,7 +684,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Buscar por Nome ou CPF..."
+                        placeholder="Nome do responsável (ou busque cliente)..."
                         value={clientSearch}
                         onChange={(e) => setClientSearch(e.target.value)}
                         className="w-full px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[12px] font-black uppercase outline-none focus:ring-4 focus:ring-primary/10 dark:text-white transition-all"

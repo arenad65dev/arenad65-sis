@@ -115,7 +115,12 @@ export class TableService {
     }
 
     // Sincronizar itens da mesa com estado final (inclui remoções)
-    static async syncItemsToTable(tableNumber: string, items: { productId: string, quantity: number }[], clientId?: string) {
+    static async syncItemsToTable(
+        tableNumber: string,
+        items: { productId: string, quantity: number }[],
+        clientId?: string,
+        ownerName?: string
+    ) {
         const table = await prisma.order.findFirst({
             where: {
                 tableNumber,
@@ -186,7 +191,8 @@ export class TableService {
                 where: { id: table.id },
                 data: {
                     totalAmount,
-                    ...(clientId !== undefined ? { clientId: clientId || null } : {})
+                    ...(clientId !== undefined ? { clientId: clientId || null } : {}),
+                    ...(ownerName !== undefined ? { notes: `OWNER:${ownerName}` } : {})
                 }
             });
         });

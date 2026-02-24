@@ -19,7 +19,8 @@ const syncItemsSchema = z.object({
         productId: z.string(),
         quantity: z.number().int().min(1)
     })),
-    clientId: z.string().optional()
+    clientId: z.string().optional(),
+    ownerName: z.string().trim().min(1).optional()
 });
 
 const closeTableSchema = z.object({
@@ -114,7 +115,7 @@ export class TableController {
             const { tableNumber } = request.params;
             const data = syncItemsSchema.parse(request.body);
 
-            const table = await TableService.syncItemsToTable(tableNumber, data.items, data.clientId);
+            const table = await TableService.syncItemsToTable(tableNumber, data.items, data.clientId, data.ownerName);
             return reply.send(table);
         } catch (error) {
             request.log.error(error);
