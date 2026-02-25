@@ -31,6 +31,7 @@ import { tablesRoutes } from './routes/tables';
 import { clientRoutes } from './routes/clients';
 import { userRoutes } from './routes/users';
 import { maintenanceRoutes } from './routes/maintenance';
+import { financeRoutes } from './routes/finance';
 import { authenticate } from './middlewares/auth';
 
 server.register(jwt, {
@@ -57,6 +58,7 @@ server.register(tablesRoutes, { prefix: '/api/tables' });
 server.register(clientRoutes, { prefix: '/api/clients' });
 server.register(userRoutes, { prefix: '/api/users' });
 server.register(maintenanceRoutes, { prefix: '/api/maintenance' });
+server.register(financeRoutes, { prefix: '/api/finance' });
 
 // Health Check
 server.get('/health', async (request, reply) => {
