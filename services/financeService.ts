@@ -46,6 +46,7 @@ export const financeService = {
       category: tx.category,
       cashier: tx.cashier,
       orderNumber: (tx as any).orderNumber,
+      orderCategories: (tx as any).orderCategories,
     }));
   },
 
