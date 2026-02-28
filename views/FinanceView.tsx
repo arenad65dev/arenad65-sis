@@ -24,10 +24,10 @@ const FinanceView: React.FC = () => {
 
   const filteredTransactions = useMemo(() => {
     if (activeTab === 'Bar / PDV') {
-      return transactions.filter((tx: any) => tx.type === 'income');
+      return transactions.filter((tx: any) => tx.category === 'Bar / PDV' || tx.description?.toLowerCase().includes('pedido') || tx.description?.toLowerCase().includes('order') || tx.orderNumber);
     }
     if (activeTab === 'Instalações') {
-      return transactions.filter((tx: any) => tx.type === 'expense');
+      return transactions.filter((tx: any) => tx.category === 'Instalações');
     }
     return transactions;
   }, [activeTab, transactions]);

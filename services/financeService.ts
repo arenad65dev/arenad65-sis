@@ -34,6 +34,7 @@ export const financeService = {
       paymentMethod: tx.paymentMethod,
       category: tx.category,
       cashier: tx.cashier,
+      orderNumber: (tx as any).orderNumber,
     }));
   },
 

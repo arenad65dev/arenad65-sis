@@ -75,6 +75,7 @@ export class FinanceService {
             user: { select: { name: true } },
           },
         },
+        order: { select: { number: true } },
       },
     });
 
@@ -85,8 +86,9 @@ export class FinanceService {
       description: tx.description || (tx.type === 'INCOME' ? 'Receita' : 'Despesa'),
       date: tx.date,
       paymentMethod: tx.paymentMethod,
-      category: tx.category?.name || null,
+      category: tx.category?.name || (tx.orderId ? 'Bar / PDV' : null),
       cashier: tx.cashierSession?.user?.name || null,
+      orderNumber: tx.order?.number || null,
     }));
   }
 }
