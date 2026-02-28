@@ -191,14 +191,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={(analytics.margin || []).map((m: any) => ({ name: m.name, value: m.percentage }))}
+                    data={(Array.isArray(analytics.margin) ? analytics.margin : []).map((m: any) => ({ name: m.name, value: m.percentage }))}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={10}
                     dataKey="value"
+                    nameKey="name"
                     stroke="none"
                   >
-                    {(analytics.margin || []).map((entry: any, index: number) => {
+                    {(Array.isArray(analytics.margin) ? analytics.margin : []).map((entry: any, index: number) => {
                       const colors = ["#13ec5b", "#137fec", "#ec13bc", "#e2b610", "#8e13ec", "#ec5b13", "#13d9ec", "#8eec13"];
                       return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                     })}
@@ -209,7 +210,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-4 justify-center">
-            {(analytics.margin || []).map((item: any, index: number) => {
+            {(!Array.isArray(analytics.margin) && Object.keys(analytics.margin || {}).length > 0) && (
+              <p className="text-[10px] text-slate-400 text-center w-full animate-pulse">Atualizando nova divisão... Recarregue a página (F5).</p>
+            )}
+            {(Array.isArray(analytics.margin) ? analytics.margin : []).map((item: any, index: number) => {
               const bcolors = ["bg-[#13ec5b]", "bg-[#137fec]", "bg-[#ec13bc]", "bg-[#e2b610]", "bg-[#8e13ec]", "bg-[#ec5b13]", "bg-[#13d9ec]", "bg-[#8eec13]"];
               return (
                 <div key={item.name} className="flex flex-col items-center p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex-1 min-w-[120px]">
