@@ -55,17 +55,27 @@ const FinanceView: React.FC = () => {
   }, [filteredTransactions]);
 
   const chartDataArea = useMemo(() => {
-    const byDay: Record<string, number> = {};
+    const byDay: Record<string, { label: string, val: number, ms: number }> = {};
 
-    [...filteredTransactions].reverse().forEach((tx: any) => {
+    filteredTransactions.forEach((tx: any) => {
       const d = new Date(tx.date);
-      const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const sortKey = `${year}-${month}-${day}`;
+      const label = `${day}/${month}`;
+
+      if (!byDay[sortKey]) {
+        byDay[sortKey] = { label, val: 0, ms: new Date(year, d.getMonth(), d.getDate()).getTime() };
+      }
+
       const signal = tx.type === 'income' ? 1 : -1;
-      byDay[key] = (byDay[key] || 0) + signal * Number(tx.amount || 0);
+      byDay[sortKey].val += signal * Number(tx.amount || 0);
     });
 
-    return Object.entries(byDay)
-      .map(([name, val]) => ({ name, val: Number(val.toFixed(2)) }))
+    return Object.values(byDay)
+      .sort((a, b) => a.ms - b.ms)
+      .map((item) => ({ name: item.label, val: Number(item.val.toFixed(2)) }))
       .slice(-14);
   }, [filteredTransactions]);
 

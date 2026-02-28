@@ -222,6 +222,16 @@ const CashierModal: React.FC<CashierModalProps> = ({
                       }`}
                   />
                 </div>
+                {closingBalanceInput > 0 && difference !== 0 && (
+                  <p className={`text-xs font-black uppercase tracking-widest text-center mt-2 ${difference > 0 ? 'text-blue-500' : 'text-red-500'}`}>
+                    {difference > 0 ? `Sobra de R$ ${difference.toFixed(2)}` : `Falta de R$ ${Math.abs(difference).toFixed(2)}`}
+                  </p>
+                )}
+                {closingBalanceInput > 0 && difference === 0 && (
+                  <p className="text-xs font-black uppercase tracking-widest text-center mt-2 text-primary">
+                    Caixa batendo!
+                  </p>
+                )}
               </div>
             </div>
           )}

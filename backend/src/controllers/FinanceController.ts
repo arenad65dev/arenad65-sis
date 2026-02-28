@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { FinanceService } from '../services/FinanceService';
 
 const querySchema = z.object({
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
   type: z.enum(['INCOME', 'EXPENSE']).optional(),
   limit: z.coerce.number().int().positive().max(2000).optional(),
 });
@@ -15,8 +15,8 @@ export class FinanceController {
       const { startDate, endDate } = querySchema.parse(request.query || {});
 
       const summary = await FinanceService.getSummary(
-        startDate ? new Date(startDate) : undefined,
-        endDate ? new Date(endDate) : undefined
+        startDate,
+        endDate
       );
 
       return reply.send(summary);
@@ -31,8 +31,8 @@ export class FinanceController {
       const { startDate, endDate, type, limit } = querySchema.parse(request.query || {});
 
       const transactions = await FinanceService.getTransactions({
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
+        startDate,
+        endDate,
         type,
         limit,
       });

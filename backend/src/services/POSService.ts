@@ -84,14 +84,12 @@ export class POSService {
         if (amountToCharge > remainingAmount) throw new Error('Paid amount cannot exceed remaining balance');
         const isFinalPayment = amountToCharge === remainingAmount;
 
-        // Find open cashier session if userId provided
+        // Find ANY open cashier session (shared cashier support)
         let cashierSessionId: string | undefined;
-        if (userId) {
-            const session = await prisma.cashierSession.findFirst({
-                where: { userId, status: 'OPEN' }
-            });
-            if (session) cashierSessionId = session.id;
-        }
+        const session = await prisma.cashierSession.findFirst({
+            where: { status: 'OPEN' }
+        });
+        if (session) cashierSessionId = session.id;
 
         return prisma.$transaction(async (tx) => {
             // 1. Create Financial Transaction

@@ -229,14 +229,12 @@ export class TableService {
             throw new Error(`Mesa ${tableNumber} não está aberta`);
         }
 
-        // Find open cashier session if userId provided
+        // Find ANY open cashier session (shared cashier support)
         let cashierSessionId: string | undefined;
-        if (userId) {
-            const session = await prisma.cashierSession.findFirst({
-                where: { userId, status: 'OPEN' }
-            });
-            if (session) cashierSessionId = session.id;
-        }
+        const session = await prisma.cashierSession.findFirst({
+            where: { status: 'OPEN' }
+        });
+        if (session) cashierSessionId = session.id;
 
         const alreadyPaid = table.transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
         const totalAmount = Number(table.totalAmount);
@@ -272,23 +270,35 @@ export class TableService {
                 if (alreadyPaid === 0) {
                     for (const item of table.items) {
                         if (item.product.type === 'PRODUCT') {
+                            const product = await tx.product.findUnique({
+                                where: { id: item.productId }
+                            });
+
+                            if (!product) {
+                                throw new Error(`Produto ${item.productId} não encontrado`);
+                            }
+
+                            if (product.stock < item.quantity) {
+                                throw new Error(`Estoque insuficiente para ${product.name}. Disponível: ${product.stock}, Solicitado: ${item.quantity}`);
+                            }
+
+                            // Usar o InventoryService herdando o contexto da transação (tx)
+                            // Nota: O InventoryService atual usa o prisma global, então precisamos garantir consistência
+                            // No entanto, por simplicidade agora vamos manter o padrão do POSService
                             await tx.product.update({
                                 where: { id: item.productId },
-                                data: {
-                                    stock: {
-                                        decrement: item.quantity
-                                    }
-                                }
+                                data: { stock: { decrement: item.quantity } }
                             });
 
                             await tx.stockMovement.create({
                                 data: {
-                                    type: 'OUT',
                                     productId: item.productId,
+                                    type: 'OUT',
                                     quantity: -item.quantity,
                                     unitCost: Number(item.product.costPrice || 0),
                                     reason: `Venda - Mesa ${tableNumber}`,
-                                    reference: table.id
+                                    reference: table.id,
+                                    userId: userId || undefined
                                 }
                             });
                         }
