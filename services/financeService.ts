@@ -19,11 +19,22 @@ interface BackendSummary {
   paymentMethods: Record<string, number>;
 }
 
+const paymentMethodMap: Record<string, string> = {
+  CREDIT_CARD: 'Cartão de Crédito',
+  DEBIT_CARD: 'Cartão de Débito',
+  CASH: 'Dinheiro',
+  PIX: 'PIX',
+  TRANSFER: 'Transferência',
+  TAB: 'Fiado'
+};
+
 export const financeService = {
-  getTransactions: async (_filter: string) => {
-    const response = await api.get<BackendTransaction[]>('/finance/transactions', {
-      params: { limit: 200 },
-    });
+  getTransactions: async (filter: string, startDate?: string, endDate?: string) => {
+    const params: any = { limit: 1000 };
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    const response = await api.get<BackendTransaction[]>('/finance/transactions', { params });
 
     return response.data.map((tx) => ({
       id: tx.id,
@@ -31,7 +42,7 @@ export const financeService = {
       amount: Number(tx.amount || 0),
       type: tx.type === 'INCOME' ? 'income' : 'expense',
       date: tx.date,
-      paymentMethod: tx.paymentMethod,
+      paymentMethod: tx.paymentMethod ? (paymentMethodMap[tx.paymentMethod] || tx.paymentMethod) : 'N/A',
       category: tx.category,
       cashier: tx.cashier,
       orderNumber: (tx as any).orderNumber,

@@ -13,7 +13,12 @@ const COLORS = ['#13ec5b', '#137fec', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const FinanceView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<FinanceTab>('all');
-  const { transactions, stats, isLoading } = useFinanceData(activeTab);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+
+  const startDate = selectedDate ? new Date(`${selectedDate}T00:00:00`).toISOString() : undefined;
+  const endDate = selectedDate ? new Date(`${selectedDate}T23:59:59`).toISOString() : undefined;
+
+  const { transactions, stats, isLoading } = useFinanceData(activeTab, startDate, endDate);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string) => {
@@ -148,16 +153,24 @@ const FinanceView: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Fluxo Financeiro</h1>
           <p className="text-slate-500">Visão baseada nas transações reais registradas no sistema.</p>
         </div>
-        <div className="flex gap-2 p-1 bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          {['all', 'Instalações', 'Bar / PDV'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setActiveTab(f as FinanceTab)}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === f ? 'bg-primary text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
-            >
-              {f === 'all' ? 'Visão Geral' : f}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] uppercase font-black tracking-widest text-slate-500 focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10"
+          />
+          <div className="flex gap-2 p-1 bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm h-10 items-center">
+            {['all', 'Instalações', 'Bar / PDV'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setActiveTab(f as FinanceTab)}
+                className={`px-4 py-1.5 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === f ? 'bg-primary text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+              >
+                {f === 'all' ? 'Visão Geral' : f}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 

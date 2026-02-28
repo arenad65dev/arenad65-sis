@@ -2,10 +2,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { financeService } from '../services/financeService';
 
-export const useFinanceData = (filter: string = 'all') => {
+export const useFinanceData = (filter: string = 'all', startDate?: string, endDate?: string) => {
   const transactionsQuery = useQuery({
-    queryKey: ['transactions', filter],
-    queryFn: () => financeService.getTransactions(filter),
+    queryKey: ['transactions', filter, startDate, endDate],
+    queryFn: () => financeService.getTransactions(filter, startDate, endDate),
     staleTime: 1000 * 60 * 5, // Cache por 5 minutos
   });
 
