@@ -37,6 +37,7 @@ export type SkimmingSumAggregateOutputType = {
 export type SkimmingMinAggregateOutputType = {
   id: string | null
   sessionId: string | null
+  userId: string | null
   amount: runtime.Decimal | null
   reason: string | null
   createdAt: Date | null
@@ -45,6 +46,7 @@ export type SkimmingMinAggregateOutputType = {
 export type SkimmingMaxAggregateOutputType = {
   id: string | null
   sessionId: string | null
+  userId: string | null
   amount: runtime.Decimal | null
   reason: string | null
   createdAt: Date | null
@@ -53,6 +55,7 @@ export type SkimmingMaxAggregateOutputType = {
 export type SkimmingCountAggregateOutputType = {
   id: number
   sessionId: number
+  userId: number
   amount: number
   reason: number
   createdAt: number
@@ -71,6 +74,7 @@ export type SkimmingSumAggregateInputType = {
 export type SkimmingMinAggregateInputType = {
   id?: true
   sessionId?: true
+  userId?: true
   amount?: true
   reason?: true
   createdAt?: true
@@ -79,6 +83,7 @@ export type SkimmingMinAggregateInputType = {
 export type SkimmingMaxAggregateInputType = {
   id?: true
   sessionId?: true
+  userId?: true
   amount?: true
   reason?: true
   createdAt?: true
@@ -87,6 +92,7 @@ export type SkimmingMaxAggregateInputType = {
 export type SkimmingCountAggregateInputType = {
   id?: true
   sessionId?: true
+  userId?: true
   amount?: true
   reason?: true
   createdAt?: true
@@ -182,6 +188,7 @@ export type SkimmingGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 export type SkimmingGroupByOutputType = {
   id: string
   sessionId: string
+  userId: string | null
   amount: runtime.Decimal
   reason: string
   createdAt: Date
@@ -213,19 +220,23 @@ export type SkimmingWhereInput = {
   NOT?: Prisma.SkimmingWhereInput | Prisma.SkimmingWhereInput[]
   id?: Prisma.StringFilter<"Skimming"> | string
   sessionId?: Prisma.StringFilter<"Skimming"> | string
+  userId?: Prisma.StringNullableFilter<"Skimming"> | string | null
   amount?: Prisma.DecimalFilter<"Skimming"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFilter<"Skimming"> | string
   createdAt?: Prisma.DateTimeFilter<"Skimming"> | Date | string
   session?: Prisma.XOR<Prisma.CashierSessionScalarRelationFilter, Prisma.CashierSessionWhereInput>
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type SkimmingOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   amount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   session?: Prisma.CashierSessionOrderByWithRelationInput
+  user?: Prisma.UserOrderByWithRelationInput
 }
 
 export type SkimmingWhereUniqueInput = Prisma.AtLeast<{
@@ -234,15 +245,18 @@ export type SkimmingWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.SkimmingWhereInput[]
   NOT?: Prisma.SkimmingWhereInput | Prisma.SkimmingWhereInput[]
   sessionId?: Prisma.StringFilter<"Skimming"> | string
+  userId?: Prisma.StringNullableFilter<"Skimming"> | string | null
   amount?: Prisma.DecimalFilter<"Skimming"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFilter<"Skimming"> | string
   createdAt?: Prisma.DateTimeFilter<"Skimming"> | Date | string
   session?: Prisma.XOR<Prisma.CashierSessionScalarRelationFilter, Prisma.CashierSessionWhereInput>
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id">
 
 export type SkimmingOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   amount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -259,6 +273,7 @@ export type SkimmingScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SkimmingScalarWhereWithAggregatesInput | Prisma.SkimmingScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Skimming"> | string
   sessionId?: Prisma.StringWithAggregatesFilter<"Skimming"> | string
+  userId?: Prisma.StringNullableWithAggregatesFilter<"Skimming"> | string | null
   amount?: Prisma.DecimalWithAggregatesFilter<"Skimming"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringWithAggregatesFilter<"Skimming"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Skimming"> | Date | string
@@ -270,11 +285,13 @@ export type SkimmingCreateInput = {
   reason: string
   createdAt?: Date | string
   session: Prisma.CashierSessionCreateNestedOneWithoutSkimmingsInput
+  user?: Prisma.UserCreateNestedOneWithoutSkimmingsInput
 }
 
 export type SkimmingUncheckedCreateInput = {
   id?: string
   sessionId: string
+  userId?: string | null
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   reason: string
   createdAt?: Date | string
@@ -286,11 +303,13 @@ export type SkimmingUpdateInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   session?: Prisma.CashierSessionUpdateOneRequiredWithoutSkimmingsNestedInput
+  user?: Prisma.UserUpdateOneWithoutSkimmingsNestedInput
 }
 
 export type SkimmingUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -299,6 +318,7 @@ export type SkimmingUncheckedUpdateInput = {
 export type SkimmingCreateManyInput = {
   id?: string
   sessionId: string
+  userId?: string | null
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   reason: string
   createdAt?: Date | string
@@ -314,6 +334,7 @@ export type SkimmingUpdateManyMutationInput = {
 export type SkimmingUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -332,6 +353,7 @@ export type SkimmingOrderByRelationAggregateInput = {
 export type SkimmingCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -344,6 +366,7 @@ export type SkimmingAvgOrderByAggregateInput = {
 export type SkimmingMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -352,6 +375,7 @@ export type SkimmingMaxOrderByAggregateInput = {
 export type SkimmingMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -359,6 +383,48 @@ export type SkimmingMinOrderByAggregateInput = {
 
 export type SkimmingSumOrderByAggregateInput = {
   amount?: Prisma.SortOrder
+}
+
+export type SkimmingCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput> | Prisma.SkimmingCreateWithoutUserInput[] | Prisma.SkimmingUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SkimmingCreateOrConnectWithoutUserInput | Prisma.SkimmingCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.SkimmingCreateManyUserInputEnvelope
+  connect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+}
+
+export type SkimmingUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput> | Prisma.SkimmingCreateWithoutUserInput[] | Prisma.SkimmingUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SkimmingCreateOrConnectWithoutUserInput | Prisma.SkimmingCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.SkimmingCreateManyUserInputEnvelope
+  connect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+}
+
+export type SkimmingUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput> | Prisma.SkimmingCreateWithoutUserInput[] | Prisma.SkimmingUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SkimmingCreateOrConnectWithoutUserInput | Prisma.SkimmingCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.SkimmingUpsertWithWhereUniqueWithoutUserInput | Prisma.SkimmingUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.SkimmingCreateManyUserInputEnvelope
+  set?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  disconnect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  delete?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  connect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  update?: Prisma.SkimmingUpdateWithWhereUniqueWithoutUserInput | Prisma.SkimmingUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.SkimmingUpdateManyWithWhereWithoutUserInput | Prisma.SkimmingUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
+}
+
+export type SkimmingUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput> | Prisma.SkimmingCreateWithoutUserInput[] | Prisma.SkimmingUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SkimmingCreateOrConnectWithoutUserInput | Prisma.SkimmingCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.SkimmingUpsertWithWhereUniqueWithoutUserInput | Prisma.SkimmingUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.SkimmingCreateManyUserInputEnvelope
+  set?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  disconnect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  delete?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  connect?: Prisma.SkimmingWhereUniqueInput | Prisma.SkimmingWhereUniqueInput[]
+  update?: Prisma.SkimmingUpdateWithWhereUniqueWithoutUserInput | Prisma.SkimmingUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.SkimmingUpdateManyWithWhereWithoutUserInput | Prisma.SkimmingUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
 }
 
 export type SkimmingCreateNestedManyWithoutSessionInput = {
@@ -403,15 +469,71 @@ export type SkimmingUncheckedUpdateManyWithoutSessionNestedInput = {
   deleteMany?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
 }
 
-export type SkimmingCreateWithoutSessionInput = {
+export type SkimmingCreateWithoutUserInput = {
   id?: string
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason: string
+  createdAt?: Date | string
+  session: Prisma.CashierSessionCreateNestedOneWithoutSkimmingsInput
+}
+
+export type SkimmingUncheckedCreateWithoutUserInput = {
+  id?: string
+  sessionId: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   reason: string
   createdAt?: Date | string
 }
 
+export type SkimmingCreateOrConnectWithoutUserInput = {
+  where: Prisma.SkimmingWhereUniqueInput
+  create: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput>
+}
+
+export type SkimmingCreateManyUserInputEnvelope = {
+  data: Prisma.SkimmingCreateManyUserInput | Prisma.SkimmingCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type SkimmingUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SkimmingWhereUniqueInput
+  update: Prisma.XOR<Prisma.SkimmingUpdateWithoutUserInput, Prisma.SkimmingUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.SkimmingCreateWithoutUserInput, Prisma.SkimmingUncheckedCreateWithoutUserInput>
+}
+
+export type SkimmingUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SkimmingWhereUniqueInput
+  data: Prisma.XOR<Prisma.SkimmingUpdateWithoutUserInput, Prisma.SkimmingUncheckedUpdateWithoutUserInput>
+}
+
+export type SkimmingUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.SkimmingScalarWhereInput
+  data: Prisma.XOR<Prisma.SkimmingUpdateManyMutationInput, Prisma.SkimmingUncheckedUpdateManyWithoutUserInput>
+}
+
+export type SkimmingScalarWhereInput = {
+  AND?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
+  OR?: Prisma.SkimmingScalarWhereInput[]
+  NOT?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
+  id?: Prisma.StringFilter<"Skimming"> | string
+  sessionId?: Prisma.StringFilter<"Skimming"> | string
+  userId?: Prisma.StringNullableFilter<"Skimming"> | string | null
+  amount?: Prisma.DecimalFilter<"Skimming"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason?: Prisma.StringFilter<"Skimming"> | string
+  createdAt?: Prisma.DateTimeFilter<"Skimming"> | Date | string
+}
+
+export type SkimmingCreateWithoutSessionInput = {
+  id?: string
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason: string
+  createdAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutSkimmingsInput
+}
+
 export type SkimmingUncheckedCreateWithoutSessionInput = {
   id?: string
+  userId?: string | null
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   reason: string
   createdAt?: Date | string
@@ -443,19 +565,41 @@ export type SkimmingUpdateManyWithWhereWithoutSessionInput = {
   data: Prisma.XOR<Prisma.SkimmingUpdateManyMutationInput, Prisma.SkimmingUncheckedUpdateManyWithoutSessionInput>
 }
 
-export type SkimmingScalarWhereInput = {
-  AND?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
-  OR?: Prisma.SkimmingScalarWhereInput[]
-  NOT?: Prisma.SkimmingScalarWhereInput | Prisma.SkimmingScalarWhereInput[]
-  id?: Prisma.StringFilter<"Skimming"> | string
-  sessionId?: Prisma.StringFilter<"Skimming"> | string
-  amount?: Prisma.DecimalFilter<"Skimming"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  reason?: Prisma.StringFilter<"Skimming"> | string
-  createdAt?: Prisma.DateTimeFilter<"Skimming"> | Date | string
+export type SkimmingCreateManyUserInput = {
+  id?: string
+  sessionId: string
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason: string
+  createdAt?: Date | string
+}
+
+export type SkimmingUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  session?: Prisma.CashierSessionUpdateOneRequiredWithoutSkimmingsNestedInput
+}
+
+export type SkimmingUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type SkimmingUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  reason?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SkimmingCreateManySessionInput = {
   id?: string
+  userId?: string | null
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   reason: string
   createdAt?: Date | string
@@ -466,10 +610,12 @@ export type SkimmingUpdateWithoutSessionInput = {
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutSkimmingsNestedInput
 }
 
 export type SkimmingUncheckedUpdateWithoutSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -477,6 +623,7 @@ export type SkimmingUncheckedUpdateWithoutSessionInput = {
 
 export type SkimmingUncheckedUpdateManyWithoutSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -487,57 +634,69 @@ export type SkimmingUncheckedUpdateManyWithoutSessionInput = {
 export type SkimmingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sessionId?: boolean
+  userId?: boolean
   amount?: boolean
   reason?: boolean
   createdAt?: boolean
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }, ExtArgs["result"]["skimming"]>
 
 export type SkimmingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sessionId?: boolean
+  userId?: boolean
   amount?: boolean
   reason?: boolean
   createdAt?: boolean
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }, ExtArgs["result"]["skimming"]>
 
 export type SkimmingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sessionId?: boolean
+  userId?: boolean
   amount?: boolean
   reason?: boolean
   createdAt?: boolean
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }, ExtArgs["result"]["skimming"]>
 
 export type SkimmingSelectScalar = {
   id?: boolean
   sessionId?: boolean
+  userId?: boolean
   amount?: boolean
   reason?: boolean
   createdAt?: boolean
 }
 
-export type SkimmingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sessionId" | "amount" | "reason" | "createdAt", ExtArgs["result"]["skimming"]>
+export type SkimmingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sessionId" | "userId" | "amount" | "reason" | "createdAt", ExtArgs["result"]["skimming"]>
 export type SkimmingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }
 export type SkimmingIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }
 export type SkimmingIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   session?: boolean | Prisma.CashierSessionDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.Skimming$userArgs<ExtArgs>
 }
 
 export type $SkimmingPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Skimming"
   objects: {
     session: Prisma.$CashierSessionPayload<ExtArgs>
+    user: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     sessionId: string
+    userId: string | null
     amount: runtime.Decimal
     reason: string
     createdAt: Date
@@ -936,6 +1095,7 @@ readonly fields: SkimmingFieldRefs;
 export interface Prisma__SkimmingClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   session<T extends Prisma.CashierSessionDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CashierSessionDefaultArgs<ExtArgs>>): Prisma.Prisma__CashierSessionClient<runtime.Types.Result.GetResult<Prisma.$CashierSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.Skimming$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Skimming$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -967,6 +1127,7 @@ export interface Prisma__SkimmingClient<T, Null = never, ExtArgs extends runtime
 export interface SkimmingFieldRefs {
   readonly id: Prisma.FieldRef<"Skimming", 'String'>
   readonly sessionId: Prisma.FieldRef<"Skimming", 'String'>
+  readonly userId: Prisma.FieldRef<"Skimming", 'String'>
   readonly amount: Prisma.FieldRef<"Skimming", 'Decimal'>
   readonly reason: Prisma.FieldRef<"Skimming", 'String'>
   readonly createdAt: Prisma.FieldRef<"Skimming", 'DateTime'>
@@ -1363,6 +1524,25 @@ export type SkimmingDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Skimmings to delete.
    */
   limit?: number
+}
+
+/**
+ * Skimming.user
+ */
+export type Skimming$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

@@ -91,6 +91,7 @@ export const UserScalarFieldEnum = {
   isActive: 'isActive',
   avatar: 'avatar',
   department: 'department',
+  lastLogin: 'lastLogin',
   preferences: 'preferences',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -224,6 +225,7 @@ export type CashierSessionScalarFieldEnum = (typeof CashierSessionScalarFieldEnu
 export const SkimmingScalarFieldEnum = {
   id: 'id',
   sessionId: 'sessionId',
+  userId: 'userId',
   amount: 'amount',
   reason: 'reason',
   createdAt: 'createdAt'

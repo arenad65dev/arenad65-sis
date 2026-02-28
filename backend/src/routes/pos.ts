@@ -12,7 +12,7 @@ export async function posRoutes(fastify: FastifyInstance) {
     // Products
     fastify.get('/products', POSController.getProducts);
     fastify.get('/products/:id', POSController.getProduct);
-    fastify.put('/products/:id', { preHandler: requireStaff }, POSController.updateProduct);
+    fastify.put<{ Params: { id: string }; Body: any }>('/products/:id', { preHandler: requireStaff }, POSController.updateProduct);
 
     // Orders
     fastify.get('/orders', POSController.getOrders);

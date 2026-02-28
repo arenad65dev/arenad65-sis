@@ -33,6 +33,7 @@ export type UserMinAggregateOutputType = {
   isActive: boolean | null
   avatar: string | null
   department: string | null
+  lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,6 +47,7 @@ export type UserMaxAggregateOutputType = {
   isActive: boolean | null
   avatar: string | null
   department: string | null
+  lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -59,6 +61,7 @@ export type UserCountAggregateOutputType = {
   isActive: number
   avatar: number
   department: number
+  lastLogin: number
   preferences: number
   createdAt: number
   updatedAt: number
@@ -75,6 +78,7 @@ export type UserMinAggregateInputType = {
   isActive?: true
   avatar?: true
   department?: true
+  lastLogin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,6 +92,7 @@ export type UserMaxAggregateInputType = {
   isActive?: true
   avatar?: true
   department?: true
+  lastLogin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -101,6 +106,7 @@ export type UserCountAggregateInputType = {
   isActive?: true
   avatar?: true
   department?: true
+  lastLogin?: true
   preferences?: true
   createdAt?: true
   updatedAt?: true
@@ -188,6 +194,7 @@ export type UserGroupByOutputType = {
   isActive: boolean
   avatar: string | null
   department: string | null
+  lastLogin: Date | null
   preferences: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
@@ -223,6 +230,7 @@ export type UserWhereInput = {
   isActive?: Prisma.BoolFilter<"User"> | boolean
   avatar?: Prisma.StringNullableFilter<"User"> | string | null
   department?: Prisma.StringNullableFilter<"User"> | string | null
+  lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   preferences?: Prisma.JsonNullableFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -231,6 +239,7 @@ export type UserWhereInput = {
   logs?: Prisma.ActivityLogListRelationFilter
   stockMovements?: Prisma.StockMovementListRelationFilter
   permissions?: Prisma.PermissionListRelationFilter
+  skimmings?: Prisma.SkimmingListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -242,6 +251,7 @@ export type UserOrderByWithRelationInput = {
   isActive?: Prisma.SortOrder
   avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -250,6 +260,7 @@ export type UserOrderByWithRelationInput = {
   logs?: Prisma.ActivityLogOrderByRelationAggregateInput
   stockMovements?: Prisma.StockMovementOrderByRelationAggregateInput
   permissions?: Prisma.PermissionOrderByRelationAggregateInput
+  skimmings?: Prisma.SkimmingOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -264,6 +275,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   isActive?: Prisma.BoolFilter<"User"> | boolean
   avatar?: Prisma.StringNullableFilter<"User"> | string | null
   department?: Prisma.StringNullableFilter<"User"> | string | null
+  lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   preferences?: Prisma.JsonNullableFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -272,6 +284,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   logs?: Prisma.ActivityLogListRelationFilter
   stockMovements?: Prisma.StockMovementListRelationFilter
   permissions?: Prisma.PermissionListRelationFilter
+  skimmings?: Prisma.SkimmingListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -283,6 +296,7 @@ export type UserOrderByWithAggregationInput = {
   isActive?: Prisma.SortOrder
   avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -303,6 +317,7 @@ export type UserScalarWhereWithAggregatesInput = {
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   avatar?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   department?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  lastLogin?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   preferences?: Prisma.JsonNullableWithAggregatesFilter<"User">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -317,6 +332,7 @@ export type UserCreateInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -325,6 +341,7 @@ export type UserCreateInput = {
   logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -336,6 +353,7 @@ export type UserUncheckedCreateInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -344,6 +362,7 @@ export type UserUncheckedCreateInput = {
   logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -355,6 +374,7 @@ export type UserUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -363,6 +383,7 @@ export type UserUpdateInput = {
   logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -374,6 +395,7 @@ export type UserUncheckedUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -382,6 +404,7 @@ export type UserUncheckedUpdateInput = {
   logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -393,6 +416,7 @@ export type UserCreateManyInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -407,6 +431,7 @@ export type UserUpdateManyMutationInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -421,6 +446,7 @@ export type UserUncheckedUpdateManyInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -435,6 +461,7 @@ export type UserCountOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   avatar?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  lastLogin?: Prisma.SortOrder
   preferences?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -449,6 +476,7 @@ export type UserMaxOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   avatar?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -462,6 +490,7 @@ export type UserMinOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   avatar?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -490,6 +519,10 @@ export type BoolFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -540,6 +573,22 @@ export type UserUpdateOneRequiredWithoutCashierSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashierSessionsInput, Prisma.UserUpdateWithoutCashierSessionsInput>, Prisma.UserUncheckedUpdateWithoutCashierSessionsInput>
 }
 
+export type UserCreateNestedOneWithoutSkimmingsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSkimmingsInput, Prisma.UserUncheckedCreateWithoutSkimmingsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSkimmingsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutSkimmingsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSkimmingsInput, Prisma.UserUncheckedCreateWithoutSkimmingsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSkimmingsInput
+  upsert?: Prisma.UserUpsertWithoutSkimmingsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSkimmingsInput, Prisma.UserUpdateWithoutSkimmingsInput>, Prisma.UserUncheckedUpdateWithoutSkimmingsInput>
+}
+
 export type UserCreateNestedOneWithoutLogsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutLogsInput, Prisma.UserUncheckedCreateWithoutLogsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutLogsInput
@@ -579,6 +628,7 @@ export type UserCreateWithoutPermissionsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -586,6 +636,7 @@ export type UserCreateWithoutPermissionsInput = {
   cashierSessions?: Prisma.CashierSessionCreateNestedManyWithoutUserInput
   logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPermissionsInput = {
@@ -597,6 +648,7 @@ export type UserUncheckedCreateWithoutPermissionsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -604,6 +656,7 @@ export type UserUncheckedCreateWithoutPermissionsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedCreateNestedManyWithoutUserInput
   logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPermissionsInput = {
@@ -631,6 +684,7 @@ export type UserUpdateWithoutPermissionsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -638,6 +692,7 @@ export type UserUpdateWithoutPermissionsInput = {
   cashierSessions?: Prisma.CashierSessionUpdateManyWithoutUserNestedInput
   logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPermissionsInput = {
@@ -649,6 +704,7 @@ export type UserUncheckedUpdateWithoutPermissionsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -656,6 +712,7 @@ export type UserUncheckedUpdateWithoutPermissionsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedUpdateManyWithoutUserNestedInput
   logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrdersInput = {
@@ -667,6 +724,7 @@ export type UserCreateWithoutOrdersInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -674,6 +732,7 @@ export type UserCreateWithoutOrdersInput = {
   logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrdersInput = {
@@ -685,6 +744,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -692,6 +752,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrdersInput = {
@@ -719,6 +780,7 @@ export type UserUpdateWithoutOrdersInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -726,6 +788,7 @@ export type UserUpdateWithoutOrdersInput = {
   logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -737,6 +800,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -744,6 +808,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCashierSessionsInput = {
@@ -755,6 +820,7 @@ export type UserCreateWithoutCashierSessionsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -762,6 +828,7 @@ export type UserCreateWithoutCashierSessionsInput = {
   logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCashierSessionsInput = {
@@ -773,6 +840,7 @@ export type UserUncheckedCreateWithoutCashierSessionsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -780,6 +848,7 @@ export type UserUncheckedCreateWithoutCashierSessionsInput = {
   logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCashierSessionsInput = {
@@ -807,6 +876,7 @@ export type UserUpdateWithoutCashierSessionsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -814,6 +884,7 @@ export type UserUpdateWithoutCashierSessionsInput = {
   logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCashierSessionsInput = {
@@ -825,10 +896,108 @@ export type UserUncheckedUpdateWithoutCashierSessionsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
+  permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSkimmingsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  isActive?: boolean
+  avatar?: string | null
+  department?: string | null
+  lastLogin?: Date | string | null
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  cashierSessions?: Prisma.CashierSessionCreateNestedManyWithoutUserInput
+  logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
+  stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
+  permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSkimmingsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  isActive?: boolean
+  avatar?: string | null
+  department?: string | null
+  lastLogin?: Date | string | null
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  cashierSessions?: Prisma.CashierSessionUncheckedCreateNestedManyWithoutUserInput
+  logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
+  stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
+  permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSkimmingsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSkimmingsInput, Prisma.UserUncheckedCreateWithoutSkimmingsInput>
+}
+
+export type UserUpsertWithoutSkimmingsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSkimmingsInput, Prisma.UserUncheckedUpdateWithoutSkimmingsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSkimmingsInput, Prisma.UserUncheckedCreateWithoutSkimmingsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSkimmingsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSkimmingsInput, Prisma.UserUncheckedUpdateWithoutSkimmingsInput>
+}
+
+export type UserUpdateWithoutSkimmingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  cashierSessions?: Prisma.CashierSessionUpdateManyWithoutUserNestedInput
+  logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
+  stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
+  permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSkimmingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  cashierSessions?: Prisma.CashierSessionUncheckedUpdateManyWithoutUserNestedInput
   logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
@@ -843,6 +1012,7 @@ export type UserCreateWithoutLogsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -850,6 +1020,7 @@ export type UserCreateWithoutLogsInput = {
   cashierSessions?: Prisma.CashierSessionCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLogsInput = {
@@ -861,6 +1032,7 @@ export type UserUncheckedCreateWithoutLogsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -868,6 +1040,7 @@ export type UserUncheckedCreateWithoutLogsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedCreateNestedManyWithoutUserInput
   stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLogsInput = {
@@ -895,6 +1068,7 @@ export type UserUpdateWithoutLogsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -902,6 +1076,7 @@ export type UserUpdateWithoutLogsInput = {
   cashierSessions?: Prisma.CashierSessionUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLogsInput = {
@@ -913,6 +1088,7 @@ export type UserUncheckedUpdateWithoutLogsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -920,6 +1096,7 @@ export type UserUncheckedUpdateWithoutLogsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedUpdateManyWithoutUserNestedInput
   stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStockMovementsInput = {
@@ -931,6 +1108,7 @@ export type UserCreateWithoutStockMovementsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -938,6 +1116,7 @@ export type UserCreateWithoutStockMovementsInput = {
   cashierSessions?: Prisma.CashierSessionCreateNestedManyWithoutUserInput
   logs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStockMovementsInput = {
@@ -949,6 +1128,7 @@ export type UserUncheckedCreateWithoutStockMovementsInput = {
   isActive?: boolean
   avatar?: string | null
   department?: string | null
+  lastLogin?: Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -956,6 +1136,7 @@ export type UserUncheckedCreateWithoutStockMovementsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedCreateNestedManyWithoutUserInput
   logs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
   permissions?: Prisma.PermissionUncheckedCreateNestedManyWithoutUserInput
+  skimmings?: Prisma.SkimmingUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStockMovementsInput = {
@@ -983,6 +1164,7 @@ export type UserUpdateWithoutStockMovementsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -990,6 +1172,7 @@ export type UserUpdateWithoutStockMovementsInput = {
   cashierSessions?: Prisma.CashierSessionUpdateManyWithoutUserNestedInput
   logs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStockMovementsInput = {
@@ -1001,6 +1184,7 @@ export type UserUncheckedUpdateWithoutStockMovementsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1008,6 +1192,7 @@ export type UserUncheckedUpdateWithoutStockMovementsInput = {
   cashierSessions?: Prisma.CashierSessionUncheckedUpdateManyWithoutUserNestedInput
   logs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
   permissions?: Prisma.PermissionUncheckedUpdateManyWithoutUserNestedInput
+  skimmings?: Prisma.SkimmingUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1021,6 +1206,7 @@ export type UserCountOutputType = {
   logs: number
   stockMovements: number
   permissions: number
+  skimmings: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1029,6 +1215,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   logs?: boolean | UserCountOutputTypeCountLogsArgs
   stockMovements?: boolean | UserCountOutputTypeCountStockMovementsArgs
   permissions?: boolean | UserCountOutputTypeCountPermissionsArgs
+  skimmings?: boolean | UserCountOutputTypeCountSkimmingsArgs
 }
 
 /**
@@ -1076,6 +1263,13 @@ export type UserCountOutputTypeCountPermissionsArgs<ExtArgs extends runtime.Type
   where?: Prisma.PermissionWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSkimmingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SkimmingWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1086,6 +1280,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   isActive?: boolean
   avatar?: boolean
   department?: boolean
+  lastLogin?: boolean
   preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1094,6 +1289,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   logs?: boolean | Prisma.User$logsArgs<ExtArgs>
   stockMovements?: boolean | Prisma.User$stockMovementsArgs<ExtArgs>
   permissions?: boolean | Prisma.User$permissionsArgs<ExtArgs>
+  skimmings?: boolean | Prisma.User$skimmingsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1106,6 +1302,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   isActive?: boolean
   avatar?: boolean
   department?: boolean
+  lastLogin?: boolean
   preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1120,6 +1317,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   isActive?: boolean
   avatar?: boolean
   department?: boolean
+  lastLogin?: boolean
   preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1134,18 +1332,20 @@ export type UserSelectScalar = {
   isActive?: boolean
   avatar?: boolean
   department?: boolean
+  lastLogin?: boolean
   preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "isActive" | "avatar" | "department" | "preferences" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "isActive" | "avatar" | "department" | "lastLogin" | "preferences" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   cashierSessions?: boolean | Prisma.User$cashierSessionsArgs<ExtArgs>
   logs?: boolean | Prisma.User$logsArgs<ExtArgs>
   stockMovements?: boolean | Prisma.User$stockMovementsArgs<ExtArgs>
   permissions?: boolean | Prisma.User$permissionsArgs<ExtArgs>
+  skimmings?: boolean | Prisma.User$skimmingsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1159,6 +1359,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     logs: Prisma.$ActivityLogPayload<ExtArgs>[]
     stockMovements: Prisma.$StockMovementPayload<ExtArgs>[]
     permissions: Prisma.$PermissionPayload<ExtArgs>[]
+    skimmings: Prisma.$SkimmingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1169,6 +1370,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     isActive: boolean
     avatar: string | null
     department: string | null
+    lastLogin: Date | null
     preferences: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
@@ -1571,6 +1773,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   logs<T extends Prisma.User$logsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$logsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   stockMovements<T extends Prisma.User$stockMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$stockMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StockMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   permissions<T extends Prisma.User$permissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$permissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  skimmings<T extends Prisma.User$skimmingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$skimmingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SkimmingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1608,6 +1811,7 @@ export interface UserFieldRefs {
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
   readonly avatar: Prisma.FieldRef<"User", 'String'>
   readonly department: Prisma.FieldRef<"User", 'String'>
+  readonly lastLogin: Prisma.FieldRef<"User", 'DateTime'>
   readonly preferences: Prisma.FieldRef<"User", 'Json'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -2116,6 +2320,30 @@ export type User$permissionsArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.PermissionScalarFieldEnum | Prisma.PermissionScalarFieldEnum[]
+}
+
+/**
+ * User.skimmings
+ */
+export type User$skimmingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Skimming
+   */
+  select?: Prisma.SkimmingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Skimming
+   */
+  omit?: Prisma.SkimmingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SkimmingInclude<ExtArgs> | null
+  where?: Prisma.SkimmingWhereInput
+  orderBy?: Prisma.SkimmingOrderByWithRelationInput | Prisma.SkimmingOrderByWithRelationInput[]
+  cursor?: Prisma.SkimmingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SkimmingScalarFieldEnum | Prisma.SkimmingScalarFieldEnum[]
 }
 
 /**

@@ -13,7 +13,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     fastify.post('/products', { preHandler: requireStaff }, InventoryController.createOrUpdateProduct);
 
     // Atualizar produto
-    fastify.put('/products/:id', { preHandler: requireStaff }, InventoryController.updateProduct);
+    fastify.put<{ Params: { id: string }; Body: any }>('/products/:id', { preHandler: requireStaff }, InventoryController.updateProduct);
 
     // Ajuste manual de estoque
     fastify.post('/stock-adjustment', { preHandler: requireStaff }, InventoryController.adjustStock);
@@ -31,7 +31,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     fastify.get('/products', InventoryController.getProducts);
 
     // Deletar produto
-    fastify.delete('/products/:id', { preHandler: requireStaff }, InventoryController.deleteProduct);
+    fastify.delete<{ Params: { id: string } }>('/products/:id', { preHandler: requireStaff }, InventoryController.deleteProduct);
 
     // Buscar categorias
     fastify.get('/categories', InventoryController.getCategories);

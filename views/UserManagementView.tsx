@@ -14,25 +14,25 @@ interface UserPermissions {
 }
 
 const MODULES = [
-  { 
-    group: 'Financeiro', 
-    icon: 'payments', 
-    items: ['Acesso Total', 'Apenas Visualização', 'Relatórios Fiscais'] 
+  {
+    group: 'Financeiro',
+    icon: 'payments',
+    items: ['Acesso Total', 'Apenas Visualização', 'Relatórios Fiscais']
   },
-  { 
-    group: 'Bar / PDV', 
-    icon: 'point_of_sale', 
-    items: ['Realizar Vendas', 'Abertura/Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços'] 
+  {
+    group: 'Bar / PDV',
+    icon: 'point_of_sale',
+    items: ['Realizar Vendas', 'Abertura/Fechamento de Caixa', 'Gestão de Estoque', 'Ajuste de Preços']
   },
-  { 
-    group: 'Instalações', 
-    icon: 'stadium', 
-    items: ['Gerenciar Reservas', 'Visualizar Grade', 'Bloqueio de Quadras'] 
+  {
+    group: 'Instalações',
+    icon: 'stadium',
+    items: ['Gerenciar Reservas', 'Visualizar Grade', 'Bloqueio de Quadras']
   },
-  { 
-    group: 'Usuários', 
-    icon: 'people', 
-    items: ['Acesso Total', 'Criar Usuários', 'Editar Permissões'] 
+  {
+    group: 'Usuários',
+    icon: 'people',
+    items: ['Acesso Total', 'Criar Usuários', 'Editar Permissões']
   },
 ];
 
@@ -106,7 +106,7 @@ const UserManagementView: React.FC = () => {
     try {
       const userData = await userService.getUser(userId);
       setSelectedUser(userData);
-      
+
       // Load permissions
       const perms: UserPermissions = {};
       userData.permissions?.forEach((p: Permission) => {
@@ -220,10 +220,10 @@ const UserManagementView: React.FC = () => {
 
   const togglePermission = async (key: string) => {
     if (!selectedUser) return;
-    
+
     const newValue = !permissions[key];
     const [module, action] = key.split('_');
-    
+
     try {
       await userService.updatePermission(selectedUser.id, { module, action, granted: newValue });
       setPermissions(prev => ({ ...prev, [key]: newValue }));
@@ -233,16 +233,16 @@ const UserManagementView: React.FC = () => {
     }
   };
 
-    const saveAllPermissions = async () => {
+  const saveAllPermissions = async () => {
     if (!selectedUser) return;
-    
+
     try {
       const perms: { module: string; action: string; granted: boolean }[] = [];
       Object.entries(permissions).forEach(([key, granted]) => {
         const [module, action] = key.split('_');
-        perms.push({ module, action, granted });
+        perms.push({ module, action, granted: granted as boolean });
       });
-      
+
       await userService.bulkUpdatePermissions(selectedUser.id, perms);
       addToast('Permissões salvas!', 'success');
     } catch (error) {
@@ -272,11 +272,10 @@ const UserManagementView: React.FC = () => {
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border backdrop-blur-md ${
-              toast.type === 'success'
+            className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border backdrop-blur-md ${toast.type === 'success'
                 ? 'bg-primary/90 text-slate-900 border-primary/20'
                 : 'bg-red-600/90 text-white border-red-500/20'
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[20px]">
               {toast.type === 'success' ? 'check_circle' : 'delete'}
@@ -322,11 +321,10 @@ const UserManagementView: React.FC = () => {
                 <button
                   key={dept}
                   onClick={() => setDepartmentFilter(dept)}
-                  className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
-                    departmentFilter === dept
+                  className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${departmentFilter === dept
                       ? 'bg-slate-900 text-white shadow-md'
                       : 'bg-white text-slate-400 border-slate-200 hover:border-primary/40'
-                  }`}
+                    }`}
                 >
                   {dept}
                 </button>
@@ -370,22 +368,21 @@ const UserManagementView: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-slate-600">
-                        {user.lastLogin 
-                          ? new Date(user.lastLogin).toLocaleString('pt-BR', { 
-                              day: '2-digit', 
-                              month: '2-digit', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
+                        {user.lastLogin
+                          ? new Date(user.lastLogin).toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
                           : 'Nunca acessou'}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
-                      user.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${user.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
+                      }`}>
                       {user.isActive ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
@@ -457,9 +454,8 @@ const UserManagementView: React.FC = () => {
                 <div className="flex gap-2 w-full">
                   <button
                     onClick={() => setShowLogsView(!showLogsView)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
-                      showLogsView ? 'bg-primary text-slate-900 border-primary' : 'bg-white border-slate-200 text-slate-500'
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${showLogsView ? 'bg-primary text-slate-900 border-primary' : 'bg-white border-slate-200 text-slate-500'
+                      }`}
                   >
                     <span className="material-symbols-outlined text-[18px]">{showLogsView ? 'admin_panel_settings' : 'manage_search'}</span>
                     {showLogsView ? 'Acessos' : 'Resumo de Logs'}
@@ -531,7 +527,7 @@ const UserManagementView: React.FC = () => {
             </div>
 
             <div className="p-6 md:p-8 bg-slate-50/50 border-t border-slate-100 flex gap-3">
-              <button 
+              <button
                 onClick={saveAllPermissions}
                 className="flex-1 py-4 bg-primary hover:bg-primary-dark text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all"
               >
