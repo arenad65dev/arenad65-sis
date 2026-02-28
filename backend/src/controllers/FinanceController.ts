@@ -6,7 +6,7 @@ const querySchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   type: z.enum(['INCOME', 'EXPENSE']).optional(),
-  limit: z.coerce.number().int().positive().max(500).optional(),
+  limit: z.coerce.number().int().positive().max(2000).optional(),
 });
 
 export class FinanceController {
@@ -39,6 +39,9 @@ export class FinanceController {
 
       return reply.send(transactions);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return reply.status(400).send({ message: 'Parâmetros de busca inválidos', issues: error.issues });
+      }
       request.log.error(error);
       return reply.status(400).send({ message: 'Erro ao buscar transações financeiras' });
     }
