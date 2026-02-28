@@ -75,20 +75,56 @@ export class FinanceService {
             user: { select: { name: true } },
           },
         },
-        order: { select: { number: true } },
+        order: {
+          include: {
+            items: {
+              include: {
+                product: {
+                  include: {
+                    category: { select: { name: true } }
+                  }
+                }
+              }
+            }
+          }
+        },
       },
     });
 
-    return transactions.map((tx) => ({
-      id: tx.id,
-      type: tx.type,
-      amount: Number(tx.amount),
-      description: tx.description || (tx.type === 'INCOME' ? 'Receita' : 'Despesa'),
-      date: tx.date,
-      paymentMethod: tx.paymentMethod,
-      category: tx.category?.name || (tx.orderId ? 'Bar / PDV' : null),
-      cashier: tx.cashierSession?.user?.name || null,
-      orderNumber: tx.order?.number || null,
-    }));
+    return transactions.map((tx) => {
+      let orderCategories: Record<string, number> = {};
+      let totalOrderAmount = 0;
+      if (tx.order?.items) {
+        tx.order.items.forEach((item) => {
+          const cname = item.product?.category?.name || (item.product?.type === 'SERVICE' ? 'Quadras / Serviços' : 'Outros');
+          const value = Number(item.price) * item.quantity;
+          orderCategories[cname] = (orderCategories[cname] || 0) + value;
+          totalOrderAmount += value;
+        });
+      }
+
+      // If the transaction amount doesn't match the order items total exactly (meaning partial payment), we can scale it down if needed, but for category shares, we'll track raw values.
+      // To keep sums correct on the finance page, we should scale the category amounts proportionally if partial payment occurred.
+      const txAmount = Number(tx.amount);
+      if (totalOrderAmount > 0 && totalOrderAmount !== txAmount) {
+        const factor = txAmount / totalOrderAmount;
+        for (const key in orderCategories) {
+          orderCategories[key] = orderCategories[key] * factor;
+        }
+      }
+
+      return {
+        id: tx.id,
+        type: tx.type,
+        amount: txAmount,
+        description: tx.description || (tx.type === 'INCOME' ? 'Receita' : 'Despesa'),
+        date: tx.date,
+        paymentMethod: tx.paymentMethod,
+        category: tx.category?.name || (tx.orderId ? 'Bar / PDV' : null),
+        cashier: tx.cashierSession?.user?.name || null,
+        orderNumber: tx.order?.number || null,
+        orderCategories: Object.keys(orderCategories).length > 0 ? orderCategories : null,
+      };
+    });
   }
 }

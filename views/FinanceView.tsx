@@ -73,15 +73,22 @@ const FinanceView: React.FC = () => {
     const grouped: Record<string, number> = {};
 
     filteredTransactions.forEach((tx: any) => {
-      const category = tx.category || 'Sem categoria';
-      grouped[category] = (grouped[category] || 0) + Number(tx.amount || 0);
+      // If we are looking at the Bar view, and the transaction has detailed order categories
+      if (activeTab === 'Bar / PDV' && tx.orderCategories) {
+        Object.entries(tx.orderCategories).forEach(([cname, amt]) => {
+          grouped[cname] = (grouped[cname] || 0) + Number(amt);
+        });
+      } else {
+        const category = tx.category || 'Sem categoria';
+        grouped[category] = (grouped[category] || 0) + Number(tx.amount || 0);
+      }
     });
 
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
-  }, [filteredTransactions]);
+      .slice(0, 8);
+  }, [filteredTransactions, activeTab]);
 
   const paymentData = useMemo(() => {
     const grouped: Record<string, number> = {};
@@ -198,7 +205,7 @@ const FinanceView: React.FC = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#0000000a" vertical={false} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px' }} formatter={(val: number) => [`R$ ${Number(val).toFixed(2)}`, 'Saldo']} />
                 <Area type="monotone" dataKey="val" stroke="#13ec5b" strokeWidth={3} fillOpacity={1} fill="url(#areaColor)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -243,8 +250,8 @@ const FinanceView: React.FC = () => {
               <BarChart data={categoryData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#0000000a" vertical={false} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                <Tooltip />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => `R$ ${val}`} />
+                <Tooltip contentStyle={{ borderRadius: '12px' }} formatter={(val: number) => [`R$ ${Number(val).toFixed(2)}`, 'Valor']} />
                 <Bar dataKey="value" fill="#137fec" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -261,7 +268,7 @@ const FinanceView: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ borderRadius: '12px' }} formatter={(val: number) => [`R$ ${Number(val).toFixed(2)}`, 'Valor']} />
               </PieChart>
             </ResponsiveContainer>
             <div className="w-[40%] space-y-3 pr-4">
