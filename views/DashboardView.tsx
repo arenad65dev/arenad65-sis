@@ -118,7 +118,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         <div className="lg:col-span-4 p-8 bg-white dark:bg-surface-dark rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl flex flex-col">
           <div className="flex justify-between items-start mb-6">
             <h4 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Curva ABC</h4>
-            <span className="text-[9px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded">Top Performance</span>
+            <span className="text-[9px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded">Últimos 30 Dias</span>
           </div>
           <div className="space-y-4 flex-1">
             {analytics.topProducts.length === 0 ? (
@@ -191,36 +191,35 @@ const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={[
-                      { name: 'Bar', value: analytics.margin.bar.percentage },
-                      { name: 'Instalações', value: analytics.margin.facilities.percentage },
-                    ]}
+                    data={(analytics.margin || []).map((m: any) => ({ name: m.name, value: m.percentage }))}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={10}
                     dataKey="value"
                     stroke="none"
                   >
-                    <Cell fill="#13ec5b" />
-                    <Cell fill="#137fec" />
+                    {(analytics.margin || []).map((entry: any, index: number) => {
+                      const colors = ["#13ec5b", "#137fec", "#ec13bc", "#e2b610", "#8e13ec", "#ec5b13", "#13d9ec", "#8eec13"];
+                      return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                    })}
                   </Pie>
-                  <Tooltip formatter={(val: number) => [`${val}%`, 'Contribuição']} />
+                  <Tooltip formatter={(val: number, name: string) => [`${val}%`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            {[
-              { name: 'Receita Bar', val: `R$ ${(Number(analytics.margin.bar.value) || 0).toFixed(2)}`, pct: `${(Number(analytics.margin.bar.percentage) || 0).toFixed(1)}%`, col: 'bg-primary' },
-              { name: 'Receita Quadras', val: `R$ ${(Number(analytics.margin.facilities.value) || 0).toFixed(2)}`, pct: `${(Number(analytics.margin.facilities.percentage) || 0).toFixed(1)}%`, col: 'bg-primary-blue' },
-            ].map(item => (
-              <div key={item.name} className="flex flex-col items-center p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                <div className={`size-2 rounded-full ${item.col} mb-1`}></div>
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{item.name}</span>
-                <span className="text-sm font-black text-slate-900 dark:text-white">{item.pct}</span>
-                <span className="text-[10px] text-slate-400">{item.val}</span>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-2 mt-4 justify-center">
+            {(analytics.margin || []).map((item: any, index: number) => {
+              const bcolors = ["bg-[#13ec5b]", "bg-[#137fec]", "bg-[#ec13bc]", "bg-[#e2b610]", "bg-[#8e13ec]", "bg-[#ec5b13]", "bg-[#13d9ec]", "bg-[#8eec13]"];
+              return (
+                <div key={item.name} className="flex flex-col items-center p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex-1 min-w-[120px]">
+                  <div className={`size-2 rounded-full ${bcolors[index % bcolors.length]} mb-1`}></div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center truncate w-full">{item.name}</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">{item.percentage.toFixed(1)}%</span>
+                  <span className="text-[10px] text-slate-400">R$ {Number(item.value).toFixed(2)}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

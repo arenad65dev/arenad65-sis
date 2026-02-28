@@ -26,10 +26,7 @@ export const useDashboardData = () => {
         analytics: analyticsQuery.data || {
             chartData: [],
             topProducts: [],
-            margin: {
-                bar: { value: 0, percentage: 0 },
-                facilities: { value: 0, percentage: 0 }
-            },
+            margin: [],
             maintenance: []
         },
         isLoading: kpiQuery.isLoading || transactionsQuery.isLoading || analyticsQuery.isLoading,

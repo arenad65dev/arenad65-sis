@@ -81,8 +81,18 @@ export class DashboardService {
     }
 
     static async getTopProducts() {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
         const topSelling = await prisma.orderItem.groupBy({
             by: ['productId'],
+            where: {
+                order: {
+                    createdAt: {
+                        gte: thirtyDaysAgo
+                    }
+                }
+            },
             _sum: { quantity: true },
             orderBy: { _sum: { quantity: 'desc' } },
             take: 5
@@ -100,32 +110,29 @@ export class DashboardService {
     }
 
     static async getMarginBreakdown() {
-        // Bar = Product Type PRODUCT
-        // Facilities = Product Type SERVICE or RENTAL
-
-        // We need to sum OrderItems based on product type
         const orderItems = await prisma.orderItem.findMany({
-            include: { product: true }
+            include: { product: { include: { category: true } } }
         });
 
-        let barTotal = 0;
-        let facilitiesTotal = 0;
+        const categoryTotals: Record<string, number> = {};
+        let grandTotal = 0;
 
         orderItems.forEach(item => {
             const total = Number(item.price) * item.quantity;
-            if (item.product.type === 'PRODUCT') {
-                barTotal += total;
-            } else {
-                facilitiesTotal += total;
-            }
+            const categoryName = item.product.category?.name || (item.product.type === 'SERVICE' ? 'Quadras/Serviços' : 'Outros');
+            categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + total;
+            grandTotal += total;
         });
 
-        const grandTotal = barTotal + facilitiesTotal || 1; // Prevent div by zero
+        if (grandTotal === 0) grandTotal = 1;
 
-        return {
-            bar: { value: barTotal, percentage: Math.round((barTotal / grandTotal) * 100) },
-            facilities: { value: facilitiesTotal, percentage: Math.round((facilitiesTotal / grandTotal) * 100) }
-        };
+        const result = Object.entries(categoryTotals).map(([name, value]) => ({
+            name,
+            value,
+            percentage: Math.round((value / grandTotal) * 100)
+        })).sort((a, b) => b.value - a.value);
+
+        return result;
     }
 
     static async getMaintenanceTasks() {
