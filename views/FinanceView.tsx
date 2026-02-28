@@ -52,7 +52,7 @@ const FinanceView: React.FC = () => {
   const chartDataArea = useMemo(() => {
     const byDay: Record<string, number> = {};
 
-    filteredTransactions.forEach((tx: any) => {
+    [...filteredTransactions].reverse().forEach((tx: any) => {
       const d = new Date(tx.date);
       const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
       const signal = tx.type === 'income' ? 1 : -1;
