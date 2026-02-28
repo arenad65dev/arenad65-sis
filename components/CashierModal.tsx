@@ -33,9 +33,16 @@ const CashierModal: React.FC<CashierModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Lógica de Saldos
-  const salesDuringShift = Number(session?.totalSales) || 0;
+  const totalSalesAll = Number(session?.totalSales) || 0;
+  const cashSales = Number(session?.cashSales) || 0;
+  const pixSales = Number(session?.pixSales) || 0;
+  const cardSales = Number(session?.cardSales) || 0;
+  const otherSales = Number(session?.otherSales) || 0;
   const totalSkimmings = Number(session?.totalSkimmings) || 0;
-  const expectedTotal = (Number(session?.initialBalance) || 0) + salesDuringShift - totalSkimmings;
+  const initialBalance = Number(session?.initialBalance) || 0;
+
+  // O saldo físico esperado em dinheiro
+  const expectedTotal = initialBalance + cashSales - totalSkimmings;
   const difference = closingBalanceInput - expectedTotal;
 
   useEffect(() => {
@@ -179,18 +186,24 @@ const CashierModal: React.FC<CashierModalProps> = ({
             <div className="space-y-6 animate-fadeIn">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Abertura + Vendas</span>
-                  <p className="text-sm font-black dark:text-white">R$ {((Number(session?.initialBalance) || 0) + salesDuringShift).toFixed(2)}</p>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Abertura + Vendas (Dinheiro)</span>
+                  <p className="text-sm font-black dark:text-white">R$ {(initialBalance + cashSales).toFixed(2)}</p>
                 </div>
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 text-right">
                   <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest block mb-1">Sangrias (-)</span>
-                  <p className="text-sm font-black text-orange-500">R$ {(Number(totalSkimmings) || 0).toFixed(2)}</p>
+                  <p className="text-sm font-black text-orange-500">R$ {totalSkimmings.toFixed(2)}</p>
                 </div>
               </div>
 
+              {/* OUTRAS FORMAS (INFO) */}
+              <div className="flex justify-between items-center px-4 py-2 border-y border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-transparent">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><span className="material-symbols-outlined text-[10px]">credit_card</span> Cartão: R$ {cardSales.toFixed(2)}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><span className="material-symbols-outlined text-[10px]">pix</span> Pix: R$ {pixSales.toFixed(2)}</span>
+              </div>
+
               <div className="p-5 bg-slate-900 dark:bg-black rounded-3xl border border-white/5 flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Esperado (Líquido)</span>
-                <p className="text-lg font-black text-white">R$ {Number(expectedTotal).toFixed(2)}</p>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Apenas Dinheiro Físico Esperado</span>
+                <p className="text-lg font-black text-white">R$ {expectedTotal.toFixed(2)}</p>
               </div>
 
               <div className="space-y-2">

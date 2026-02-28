@@ -159,17 +159,38 @@ export class CashierService {
                     orderBy: {
                         createdAt: 'desc'
                     }
+                },
+                transactions: {
+                    select: { amount: true, paymentMethod: true, type: true }
                 }
             }
         });
 
-        // If there's an open session, return it regardless of who opened it
-        // This allows all users to use the same cashier
         if (openSession) {
-            return openSession;
+            let cashSales = 0;
+            let pixSales = 0;
+            let cardSales = 0;
+            let otherSales = 0;
+
+            for (const tx of openSession.transactions) {
+                if (tx.type === 'INCOME') {
+                    const amt = Number(tx.amount);
+                    if (tx.paymentMethod === 'CASH') cashSales += amt;
+                    else if (tx.paymentMethod === 'PIX') pixSales += amt;
+                    else if (tx.paymentMethod === 'CREDIT_CARD' || tx.paymentMethod === 'DEBIT_CARD') cardSales += amt;
+                    else otherSales += amt;
+                }
+            }
+
+            return {
+                ...openSession,
+                cashSales,
+                pixSales,
+                cardSales,
+                otherSales
+            };
         }
 
-        // No open session - return null
         return null;
     }
 
@@ -241,10 +262,30 @@ export class CashierService {
             throw new Error('Sessão de caixa não encontrada');
         }
 
-        return session;
+        let cashSales = 0;
+        let pixSales = 0;
+        let cardSales = 0;
+        let otherSales = 0;
+
+        for (const tx of session.transactions) {
+            if (tx.type === 'INCOME') {
+                const amt = Number(tx.amount);
+                if (tx.paymentMethod === 'CASH') cashSales += amt;
+                else if (tx.paymentMethod === 'PIX') pixSales += amt;
+                else if (tx.paymentMethod === 'CREDIT_CARD' || tx.paymentMethod === 'DEBIT_CARD') cardSales += amt;
+                else otherSales += amt;
+            }
+        }
+
+        return {
+            ...session,
+            cashSales,
+            pixSales,
+            cardSales,
+            otherSales
+        };
     }
 
-    // Get ANY open session (global status)
     static async getOpenSession() {
         const session = await prisma.cashierSession.findFirst({
             where: {
@@ -263,10 +304,38 @@ export class CashierService {
                     orderBy: {
                         createdAt: 'desc'
                     }
+                },
+                transactions: {
+                    select: { amount: true, paymentMethod: true, type: true }
                 }
             }
         });
 
-        return session;
+        if (session) {
+            let cashSales = 0;
+            let pixSales = 0;
+            let cardSales = 0;
+            let otherSales = 0;
+
+            for (const tx of session.transactions) {
+                if (tx.type === 'INCOME') {
+                    const amt = Number(tx.amount);
+                    if (tx.paymentMethod === 'CASH') cashSales += amt;
+                    else if (tx.paymentMethod === 'PIX') pixSales += amt;
+                    else if (tx.paymentMethod === 'CREDIT_CARD' || tx.paymentMethod === 'DEBIT_CARD') cardSales += amt;
+                    else otherSales += amt;
+                }
+            }
+
+            return {
+                ...session,
+                cashSales,
+                pixSales,
+                cardSales,
+                otherSales
+            };
+        }
+
+        return null;
     }
 }

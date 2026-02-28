@@ -106,6 +106,10 @@ export interface CashierSession {
   totalSales?: number;
   totalSkimmings?: number; // Sangrias acumuladas
   skimmingHistory?: Array<{ amount: number; reason: string; time: string }>;
+  cashSales?: number;
+  pixSales?: number;
+  cardSales?: number;
+  otherSales?: number;
 }
 
 export interface Transaction {
