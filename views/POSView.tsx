@@ -576,9 +576,9 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                 return (
                   <div key={table.id} className="bg-white dark:bg-surface-dark rounded-[32px] border border-slate-100 dark:border-slate-800 p-6 shadow-sm hover:shadow-xl transition-all group flex flex-col gap-4">
                     <div className="flex justify-between items-start">
-                      <div className="size-14 bg-slate-100 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-200 dark:border-slate-800">
+                      <div className="size-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-200 dark:border-slate-800">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Mesa</span>
-                        <span className="text-2xl font-black dark:text-white leading-none mt-1">{table.tableNumber}</span>
+                        <span className="text-3xl font-black dark:text-white leading-none mt-1">{table.tableNumber}</span>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Subtotal</p>
@@ -587,12 +587,15 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                     </div>
 
                     <div className="flex-1 flex flex-col gap-3">
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black uppercase dark:text-white truncate">
+                      <div className="flex items-center gap-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/20">
+                        <div className="size-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-primary text-[16px]">person</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[12px] font-black text-slate-900 dark:text-white truncate leading-tight">
                             {getTableOwnerName(table) || 'SEM RESPONSAVEL'}
                           </p>
-                          <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+                          <p className="text-[8px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
                             Desde {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -625,37 +628,27 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
               <button
                 onClick={async () => {
                   try {
-                    const tableNumber = prompt('Digite o número da mesa:');
-                    if (tableNumber && tableNumber.trim()) {
-                      await tableService.openTable({ tableNumber: tableNumber.trim() });
-                      addToast(`Mesa ${tableNumber} aberta com sucesso!`, 'success');
-                      // Recarregar mesas
-                      const tables = await tableService.getOpenTables();
-                      const tablesMap: Record<string, Table> = {};
-                      tables.forEach((table: Table) => {
-                        tablesMap[table.tableNumber] = table;
-                      });
-                      setOpenTables(tablesMap);
-                    }
+                    // Get next available table number automatically
+                    const nextTableNumber = await tableService.getNextAvailableTableNumber();
+                    await tableService.openTable({}); // No tableNumber needed - will be assigned automatically
+                    addToast(`Mesa ${nextTableNumber} aberta com sucesso!`, 'success');
+                    // Recarregar mesas
+                    const tables = await tableService.getOpenTables();
+                    const tablesMap: Record<string, Table> = {};
+                    tables.forEach((table: Table) => {
+                      tablesMap[table.tableNumber] = table;
+                    });
+                    setOpenTables(tablesMap);
                   } catch (error: any) {
                     console.error('Error opening table:', error);
-
-                    // Handle specific error cases
-                    if (error.response?.status === 400) {
-                      if (error.response?.data?.message?.includes('já está aberta')) {
-                        addToast(`Mesa ${tableNumber} já está aberta!`, 'error');
-                      } else {
-                        addToast(error.response?.data?.message || 'Erro ao abrir mesa', 'error');
-                      }
-                    } else {
-                      addToast('Erro ao abrir mesa', 'error');
-                    }
+                    addToast(error.response?.data?.message || 'Erro ao abrir mesa', 'error');
                   }
                 }}
                 className="bg-slate-50 dark:bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 flex flex-col items-center justify-center gap-4 text-slate-400 hover:border-primary hover:text-primary transition-all group"
               >
                 <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
                 <span className="text-[11px] font-black uppercase tracking-[0.2em]">Abrir Nova Mesa</span>
+                <span className="text-[9px] text-slate-500 dark:text-slate-500 font-medium">Numeração Automática</span>
               </button>
             </div>
           )}

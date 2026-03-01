@@ -3,7 +3,7 @@ import { TableService } from '../services/TableService';
 import { z } from 'zod';
 
 const openTableSchema = z.object({
-    tableNumber: z.string().min(1),
+    tableNumber: z.string().optional(),
     clientId: z.string().optional()
 });
 
@@ -33,6 +33,16 @@ const transferTableSchema = z.object({
 });
 
 export class TableController {
+
+    static async getNextAvailableTableNumber(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const nextNumber = await TableService.getNextAvailableTableNumber();
+            return reply.send({ nextTableNumber: nextNumber });
+        } catch (error) {
+            request.log.error(error);
+            return reply.status(500).send({ message: 'Erro ao buscar próximo número da mesa' });
+        }
+    }
 
     static async getOpenTables(request: FastifyRequest, reply: FastifyReply) {
         try {

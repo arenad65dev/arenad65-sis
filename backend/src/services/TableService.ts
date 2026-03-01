@@ -2,24 +2,64 @@ import { prisma } from '../lib/prisma';
 import { OrderStatus } from '../generated/client/client';
 
 export class TableService {
+    // Get next available table number
+    static async getNextAvailableTableNumber(): Promise<string> {
+        // Get all closed/paid/cancelled tables to find available numbers
+        const usedTables = await prisma.order.findMany({
+            where: {
+                status: {
+                    in: [OrderStatus.OPEN, OrderStatus.PAID]
+                },
+                tableNumber: { not: null }
+            },
+            select: { tableNumber: true },
+            distinct: ['tableNumber']
+        });
+
+        const usedNumbers = new Set(
+            usedTables
+                .map(t => t.tableNumber)
+                .filter(t => t && /^\d+$/.test(t)) // Only numeric table numbers
+                .map(t => parseInt(t!))
+        );
+
+        // Find the first available number starting from 1
+        let nextNumber = 1;
+        while (usedNumbers.has(nextNumber)) {
+            nextNumber++;
+        }
+
+        return nextNumber.toString().padStart(2, '0'); // Format as "01", "02", etc.
+    }
+
     // Abrir mesa (criar um pedido em aberto para a mesa)
-    static async openTable(data: { tableNumber: string, userId?: string, clientId?: string }) {
+    static async openTable(data: { tableNumber?: string, userId?: string, clientId?: string }) {
+        // If no tableNumber provided, automatically assign one
+        let tableNumber = data.tableNumber;
+        if (!tableNumber) {
+            tableNumber = await this.getNextAvailableTableNumber();
+        } else {
+            // Validate that provided tableNumber is numeric
+            if (!/^\d+$/.test(tableNumber)) {
+                throw new Error('Número da mesa deve ser numérico. Use apenas números.');
+            }
+        }
         // Verificar se já existe uma mesa aberta
         const existingTable = await prisma.order.findFirst({
             where: {
-                tableNumber: data.tableNumber,
+                tableNumber: tableNumber,
                 status: OrderStatus.OPEN
             }
         });
 
         if (existingTable) {
-            throw new Error(`Mesa ${data.tableNumber} já está aberta`);
+            throw new Error(`Mesa ${tableNumber} já está aberta`);
         }
 
         // Criar um novo pedido para a mesa
         return prisma.order.create({
             data: {
-                tableNumber: data.tableNumber,
+                tableNumber: tableNumber,
                 status: OrderStatus.OPEN,
                 totalAmount: 0,
                 userId: data.userId,

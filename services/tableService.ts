@@ -44,6 +44,12 @@ export interface TableItem {
 }
 
 export const tableService = {
+    // Obter próximo número disponível
+    getNextAvailableTableNumber: async () => {
+        const response = await api.get('/tables/next-number');
+        return response.data.nextTableNumber;
+    },
+
     // Listar mesas abertas
     getOpenTables: async () => {
         const response = await api.get('/tables');
@@ -57,7 +63,7 @@ export const tableService = {
     },
 
     // Abrir mesa
-    openTable: async (data: { tableNumber: string, clientId?: string }) => {
+    openTable: async (data: { tableNumber?: string, clientId?: string }) => {
         const response = await api.post('/tables/open', data);
         return response.data;
     },

@@ -6,6 +6,9 @@ export async function tablesRoutes(fastify: FastifyInstance) {
     // Add authentication middleware to protect all table routes
     fastify.addHook('onRequest', requireStaff);
     
+    // Obter próximo número disponível
+    fastify.get('/next-number', TableController.getNextAvailableTableNumber);
+
     // Listar mesas abertas
     fastify.get('/', TableController.getOpenTables);
 
