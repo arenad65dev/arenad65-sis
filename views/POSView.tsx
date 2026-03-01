@@ -60,6 +60,23 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
     return getOwnerNameFromNotes(table.notes);
   };
 
+  const getTableTimeInfo = (createdAt: string) => {
+    const tableDate = new Date(createdAt);
+    const today = new Date();
+    const isToday = tableDate.toDateString() === today.toDateString();
+    
+    if (isToday) {
+      return `Hoje ${tableDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      return tableDate.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+  };
+
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -596,7 +613,7 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                             {getTableOwnerName(table) || 'SEM RESPONSAVEL'}
                           </p>
                           <p className="text-[8px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                            Desde {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {getTableTimeInfo(table.createdAt)}
                           </p>
                         </div>
                       </div>
