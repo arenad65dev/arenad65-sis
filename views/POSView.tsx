@@ -576,9 +576,9 @@ const POSView: React.FC<POSViewProps> = ({ isCashierOpen, onOpenCashier }) => {
                 return (
                   <div key={table.id} className="bg-white dark:bg-surface-dark rounded-[32px] border border-slate-100 dark:border-slate-800 p-6 shadow-sm hover:shadow-xl transition-all group flex flex-col gap-4">
                     <div className="flex justify-between items-start">
-                      <div className="size-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-200 dark:border-slate-800">
+                      <div className="size-14 bg-slate-100 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-200 dark:border-slate-800">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Mesa</span>
-                        <span className="text-3xl font-black dark:text-white leading-none mt-1">{table.tableNumber}</span>
+                        <span className="text-2xl font-black dark:text-white leading-none mt-1">{table.tableNumber}</span>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Subtotal</p>
